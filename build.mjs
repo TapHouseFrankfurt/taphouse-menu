@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 const __dir = dirname(fileURLToPath(import.meta.url));
-const ROOT = join(__dir, '..');
+const ROOT = __dir;  // build.mjs runs from repo root
 const PUB = join(ROOT, 'public');
 
 const URLS = {
