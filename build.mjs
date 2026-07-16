@@ -15,7 +15,7 @@ const URLS = {
 // ---------- fetch + extract ----------
 async function fetchPdf(url){
   const r = await fetch(url, { redirect:'follow', headers:{'User-Agent':'Mozilla/5.0 TapHouseMenuBot'} });
-  console.log('FETCH',url,'->',r.status,r.headers.get('content-type'),r.url);
+  console.log('FETCH',url,'->',r.status,r.headers.get('content-type'));
   if(!r.ok) throw new Error('fetch '+url+' -> '+r.status);
   return new Uint8Array(await r.arrayBuffer());
 }
@@ -35,7 +35,7 @@ async function extractLines(data){
   return lines;
 }
 
-const JUNK = /^\+?\d|www\.|Mendelssohn|BEERS ON TAP|Beers on Tap|Optional: Beer|Card payments|Girocard|Page \d|Subscribe|---PAGE|Untappd Rating/i;
+const JUNK = /^\+\d|www\.|Mendelssohn|BEERS ON TAP|Beers on Tap|Optional: Beer|Card payments|Girocard|Page \d|Subscribe|---PAGE|Untappd Rating/i;
 const hasMeta = s => / • /.test(s);
 const hasPrice = s => /€/.test(s);
 const isStart = s => /^\d+\.\s+/.test(s);
@@ -247,13 +247,9 @@ async function main(){
   if(process.env.SELFTEST){
     ({tap,bottle}=JSON.parse(readFileSync(join(__dir,'_fixture.json'),'utf8')));
   } else {
-    const tb=await fetchPdf(URLS.tap); const bb=await fetchPdf(URLS.bottle);
-    console.log('tap bytes',tb.length,'head',JSON.stringify(new TextDecoder().decode(tb.slice(0,16))));
-    console.log('bottle bytes',bb.length,'head',JSON.stringify(new TextDecoder().decode(bb.slice(0,16))));
-    const tapLines=await extractLines(tb); const botLines=await extractLines(bb);
-    console.log('tapLines',tapLines.length,'botLines',botLines.length);
-    console.log('tap sample',JSON.stringify(tapLines.slice(0,6)));
-    tap=parseTap(tapLines); bottle=parseBottle(botLines);
+    const [tb,bb]=await Promise.all([fetchPdf(URLS.tap),fetchPdf(URLS.bottle)]);
+    tap=parseTap(await extractLines(tb));
+    bottle=parseBottle(await extractLines(bb));
   }
   console.log(`Parsed: ${tap.length} taps, ${Object.values(bottle).reduce((a,b)=>a+b.length,0)} bottles in ${Object.keys(bottle).length} categories`);
   if(tap.length<5 || Object.keys(bottle).length<5) throw new Error('Parse looks wrong — aborting so we never publish an empty menu.');
