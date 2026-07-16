@@ -1,0 +1,7 @@
+{
+  "name": "taphouse-menu-auto",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "dependencies": { "pdfjs-dist": "4.2.67" }
+}
