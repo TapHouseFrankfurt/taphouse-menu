@@ -103,8 +103,7 @@ FONTS='''
 
 def css():
     return FONTS+'''
-@page{size:A4;margin:14mm 13mm 18mm 13mm;
- @bottom-center{content:"Hops. Heat. Frankfurt.  ·  #SpiceCraft · #EinfachCraftBier  ·  Untappd: TapHouse Frankfurt";font-family:"Jost";font-size:7.2pt;color:#9a805e;letter-spacing:.4pt}
+@page{size:A4;margin:14mm 13mm 14mm 13mm;
  @bottom-right{content:"Seite " counter(page) "/" counter(pages);font-family:"Jost";font-size:7pt;color:#b09b78}}
 *{box-sizing:border-box;margin:0;padding:0}
 .bg{position:fixed;top:-14mm;left:-13mm;width:210mm;height:297mm;background:'''+CREAM+''';z-index:-2}
@@ -136,15 +135,21 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .bp2{font-size:7.4pt;color:'''+CRIM+''';font-weight:600}
 .content{padding-bottom:60mm}
 .bottomgroup{position:absolute;left:0;right:0;bottom:0}
+.sheet{display:flex;flex-direction:column;min-height:265mm}
 .sheet.brk{break-before:page}
-.footwrap{margin-top:8pt;break-inside:avoid}
+.fill{flex:1 0 auto}
+.footwrap{flex:0 0 auto;margin-top:8pt;break-inside:avoid}
+.foot{border-top:.6pt solid '''+GOLD+''';padding-top:5pt;display:flex;justify-content:space-between;align-items:baseline;gap:10pt}
+.foot .fl{font-family:"Jost";font-size:7.2pt;color:'''+DEEP+'''}
+.foot .fc{font-family:"Cormorant";font-style:italic;font-weight:600;font-size:9.5pt;color:'''+CRIM+'''}
+.foot .fr{font-family:"Jost";font-size:7.2pt;color:'''+MUT+''';letter-spacing:.3pt}
 .qrzone{break-inside:avoid;margin-top:6pt}
 .qrhead{font-family:"Cormorant";font-weight:700;font-size:13pt;color:'''+CRIM+''';text-align:center;letter-spacing:.5pt;border-bottom:1pt solid '''+SOFTG+''';padding-bottom:3pt;margin-bottom:8pt}
 .qrrow{display:flex;justify-content:space-between;gap:10pt;align-items:flex-start}
 .qrrev{justify-content:center;gap:46pt;margin-top:4pt}
 .qrcell{flex:0 0 auto;text-align:center}
-.qrrow .qrcell img{width:72pt;height:72pt;display:block;margin:0 auto;border:1pt solid #e7d3ab;border-radius:4pt}
-.qrrev .qrcell img{width:72pt;height:72pt}
+.qrrow .qrcell img{width:62pt;height:62pt;display:block;margin:0 auto;border:1pt solid #e7d3ab;border-radius:4pt}
+.qrrev .qrcell img{width:74pt;height:74pt}
 .minicontact{font-family:"Jost";font-size:7.4pt;color:'''+DEEP+''';text-align:center;margin-top:6pt}
 .qcap{font-family:"Jost";font-weight:600;font-size:8pt;color:'''+CRIM+''';margin-top:3pt}
 .qsub{font-family:"Jost";font-size:6.6pt;color:'''+MUT+''';font-style:italic;margin-top:.5pt}
@@ -157,7 +162,7 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .caddr{font-family:"Jost";font-size:8pt;color:#4A1019;margin-top:3pt}
 .csoc{font-family:"Jost";font-size:8pt;color:#6D1A28;margin-top:3pt}
 .csoc b{color:#6D1A28}
-.paystrip{background:#C9963A;border-radius:6pt;padding:6pt 12pt;text-align:center;margin:0 0 6pt;break-inside:avoid}
+.paystrip{background:#C9963A;border-radius:6pt;padding:6pt 12pt;text-align:center;margin:8pt 0 0;break-inside:avoid}
 .pl1{font-family:"Cormorant";font-weight:700;font-size:12pt;color:#4A1019}
 .pl2{font-family:"Jost";font-size:7.6pt;color:#4A1019;margin-top:2pt;line-height:1.35}
 .head{padding:0 0 9pt;margin-bottom:9pt;border-bottom:1.5pt solid #C9963A;text-align:left}
@@ -188,6 +193,7 @@ def qr_cell(img, cap, sub=''):
 QR_BLOCK = ('<div class="qrzone">'
     '<div class="qrhead">Scan for more &nbsp;·&nbsp; Mehr entdecken</div>'
     '<div class="qrrow">'
+    + qr_cell('tap.png','Tap Beers','Bierkarte · live')
     + qr_cell('food.png','Food Menu','Speisekarte')
     + qr_cell('bottle.png','Bottled Beers','Flaschenbiere')
     + qr_cell('other.png','Other Drinks','Weitere Getränke')
@@ -199,20 +205,26 @@ QR_BLOCK = ('<div class="qrzone">'
     + qr_cell('tripadvisor.png','Review on Tripadvisor')
     + '</div></div>')
 
-FOOT_TAP = (PAY + '<div class="minicontact">TapHouse Frankfurt · Mendelssohnstraße 51 · 60325 Frankfurt am Main · '
-            '+49 69 60660989 · taphousefrankfurt.com · Instagram / Facebook / Untappd @taphousefrankfurt</div>')
+# Gold-line branding row (mirrors the food-menu footer): gold border-top + contact / tagline / hashtags
+FOOT_ROW = ('<div class="foot">'
+            '<span class="fl">TapHouse Frankfurt · Mendelssohnstraße 51 · 60325 Frankfurt · +49 69 60660989</span>'
+            '<span class="fc">Hops. Heat. Frankfurt.</span>'
+            '<span class="fr">#SpiceCraft · #EinfachCraftBier</span>'
+            '</div>')
 
 def tap_body():
     core = tap_items(lambda n: n <= 7)
     rot  = tap_items(lambda n: n >= 8)
-    note1='<div class="note">Our core line-up — the regulars you can count on. Ratings are live from Untappd.</div>'
-    note2='<div class="note">Rotating taps 8–20 — our ever-changing guest selection, updated as kegs change. Scan any code on page&nbsp;1 for the always-current list.</div>'
+    note1='<div class="note">Tasting flight — choose any five 100&#8201;ml pours from our twenty taps. Ratings are live from Untappd.</div>'
+    note2='<div class="note">Rotating taps 8–20 — our ever-changing tap selection, updated as kegs change. Scan any code on page&nbsp;1 for the always-current list.</div>'
+    # Page 1: no card-payments strip (frees space); branding + gold line bottom-aligned.
     sheet1=('<div class="sheet">'+header('Beers on Tap','“Spice amplifies hops. Hops cut spice.”')
             +'<div class="fill">'+note1+'<div class="cols2">'+core+'</div>'+QR_BLOCK+'</div>'
-            +'<div class="footwrap">'+FOOT_TAP+'</div></div>')
+            +'<div class="footwrap">'+FOOT_ROW+'</div></div>')
+    # Page 2: branding gold line + card-payments strip, bottom-aligned.
     sheet2=('<div class="sheet brk">'+header('Beers on Tap — Rotating','Taps 8–20 · changes often')
             +'<div class="fill">'+note2+'<div class="cols2">'+rot+'</div></div>'
-            +'<div class="footwrap">'+FOOT_TAP+'</div></div>')
+            +'<div class="footwrap">'+FOOT_ROW+PAY+'</div></div>')
     return '<div class="bg"></div><div class="bgband"></div>'+sheet1+sheet2
 
 def build(kind, outname):
