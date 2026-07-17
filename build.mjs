@@ -317,6 +317,14 @@ async function main(){
   }
   console.log(`Parsed: ${tap.length} taps, ${Object.values(bottle).reduce((a,b)=>a+b.length,0)} bottles in ${Object.keys(bottle).length} categories`);
   if(tap.length<5 || Object.keys(bottle).length<5) throw new Error('Parse looks wrong — aborting so we never publish an empty menu.');
+  // Emit the parsed live feed as JSON so the Python PDF renderer (pdf/render_drinks.py)
+  // builds the drinks PDFs from the same data. Curated descriptions/spirits stay in pdf/data.py.
+  try{
+    const dj={ tap: tap.map(t=>({name:t.name,loc:t.loc,style:t.style,abv:t.abv,ibu:t.ibu,prices:t.prices,rating:rmap[norm(t.name)]||[0,0]})),
+               bottle: Object.fromEntries(Object.entries(bottle).map(([c,it])=>[c, it.map(b=>({name:b.name,loc:b.loc,style:b.style,abv:b.abv,size:b.size,price:b.price}))])) };
+    writeFileSync(join(PUB,'_drinks.json'), JSON.stringify(dj));
+    console.log('Wrote _drinks.json:', dj.tap.length, 'taps');
+  }catch(e){ console.log('_drinks.json skipped', e.message); }
   const files=build(tap,bottle,other,rmap,emblem,stamp);
   for(const [name,html] of Object.entries(files)){ const fp=join(PUB,name); mkdirSync(dirname(fp),{recursive:true}); writeFileSync(fp,html); }
   console.log('Wrote', Object.keys(files).join(', '), '-> public/');
