@@ -2,8 +2,8 @@ name: Build & publish TapHouse menu
 
 on:
   schedule:
-    - cron: '0 5 * * *'
-  workflow_dispatch:
+    - cron: '0 5 * * *'      # every day ~06:00–07:00 Frankfurt time
+  workflow_dispatch:          # lets you run it manually anytime
   push:
     branches: [ main ]
 
@@ -24,13 +24,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-      - run: npm install
-      - name: Build menus from live Untappd data
+      - run: npm ci
+      - name: Build menus + emit _drinks.json from live Untappd data
         run: node build.mjs
+      # ---- Drinks PDFs (light print, match the food menu) auto-refreshed from the feed ----
+      # Non-fatal: if this fails, the HTML menus still deploy and the committed static
+      # drinks PDFs (copied by build.mjs) remain as a fallback, so QR codes never break.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Render drinks PDFs from live feed
+        continue-on-error: true
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libpango-1.0-0 libpangocairo-1.0-0 libpangoft2-1.0-0 libgdk-pixbuf-2.0-0 libcairo2 libffi-dev shared-mime-info fonts-dejavu-core || true
+          python -m pip install --quiet weasyprint
+          python pdf/render_drinks.py
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
