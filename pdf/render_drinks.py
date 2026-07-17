@@ -29,10 +29,14 @@ def tap_html():
         pr="   ".join('%s <b>€%s</b>'%(esc(sz),esc(p)) for sz,p in prices)
         d='<div class="d">%s</div>'%esc(desc) if desc else ''
         sc,cnt=(D.TAP_RATING[idx] if idx < len(D.TAP_RATING) else (0,0))
+        # Use the real tap number from the live feed (skips sold-out taps like 8/10);
+        # fall back to sequential only if TAP_NUM is unavailable (curated snapshot).
+        _tn = getattr(D, 'TAP_NUM', None)
+        tapno = _tn[idx] if (_tn and idx < len(_tn)) else idx+1
         rate=''
         if sc:
             rate='<div class="rate">%s <span class="rs">%.2f</span> <span class="rc">%s ratings</span></div>'%(bub_img(sc),sc,D.kfmt(cnt))
-        out.append('<div class="item"><div class="n"><span class="num">%d</span>%s</div>%s<div class="m">%s · %s</div>%s<div class="p">%s</div></div>'%(idx+1,esc(name),rate,esc(meta),esc(origin),d,pr))
+        out.append('<div class="item"><div class="n"><span class="num">%d</span>%s</div>%s<div class="m">%s · %s</div>%s<div class="p">%s</div></div>'%(tapno,esc(name),rate,esc(meta),esc(origin),d,pr))
     return "".join(out)
 
 def bottle_html():

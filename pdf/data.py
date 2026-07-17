@@ -365,6 +365,7 @@ if _os.path.exists(_J):
             TAP = [ (t['name'], t.get('loc',''), t.get('style',''), t.get('abv',''), t.get('ibu',''),
                      _desc.get(t['name'],''), [tuple(p) for p in t.get('prices',[])]) for t in _live['tap'] ]
             TAP_RATING = [ tuple(t.get('rating',(0,0))) for t in _live['tap'] ]
+            TAP_NUM = [ int(t['num']) if t.get('num') is not None else i+1 for i,t in enumerate(_live['tap']) ]
         if _live.get('bottle'):
             BOTTLE = { cat: [ (b['name'], b.get('loc',''), b.get('style',''), b.get('abv',''), b.get('size',''), b.get('price','')) for b in items ]
                        for cat, items in _live['bottle'].items() }
