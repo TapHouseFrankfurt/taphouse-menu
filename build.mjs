@@ -320,7 +320,7 @@ async function main(){
   // Emit the parsed live feed as JSON so the Python PDF renderer (pdf/render_drinks.py)
   // builds the drinks PDFs from the same data. Curated descriptions/spirits stay in pdf/data.py.
   try{
-    const dj={ tap: tap.map(t=>({name:t.name,loc:t.loc,style:t.style,abv:t.abv,ibu:t.ibu,prices:t.prices,rating:rmap[norm(t.name)]||[0,0]})),
+    const dj={ tap: tap.map(t=>({num:t.num,name:t.name,loc:t.loc,style:t.style,abv:t.abv,ibu:t.ibu,prices:t.prices,rating:rmap[norm(t.name)]||[0,0]})),
                bottle: Object.fromEntries(Object.entries(bottle).map(([c,it])=>[c, it.map(b=>({name:b.name,loc:b.loc,style:b.style,abv:b.abv,size:b.size,price:b.price}))])) };
     writeFileSync(join(PUB,'_drinks.json'), JSON.stringify(dj));
     console.log('Wrote _drinks.json:', dj.tap.length, 'taps');
