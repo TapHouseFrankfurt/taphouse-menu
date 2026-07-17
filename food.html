@@ -26,20 +26,15 @@ header.top{padding:26px 16px 16px;text-align:center;position:relative}
 .top .mid .bar{width:46px;height:3px;background:linear-gradient(90deg,var(--gold),var(--yellow));margin:8px auto 0;border-radius:3px}
 .top .addr{font-size:11px;color:var(--mut);margin-top:10px}
 @media(max-width:520px){
-  .top .hrow{gap:6px}
-  .top .cam{height:40px;max-width:140px}
-  .top .emb{height:58px}
-  .top .mid h1{font-size:22px}
-  .top .mid .tag{font-size:10px}
-}
-@media(max-width:400px){
-  .top .hrow{flex-direction:column;gap:10px}
-  .top .cam{height:48px;max-width:190px}
-  .top .emb{height:54px}
-  .top .mid h1{font-size:27px;white-space:normal}
-  .top .mid .tag{font-size:11px;letter-spacing:1px}
-  .top .mid .sub{font-size:11px}
-  .top .addr{font-size:10px}
+  header.top{padding:12px 12px 8px}
+  .top .hrow{gap:7px}
+  .top .cam{height:34px;max-width:100px}
+  .top .emb{display:none}
+  .top .mid h1{font-size:19px;white-space:normal;line-height:1.05}
+  .top .mid .tag{font-size:9px;margin-top:2px}
+  .top .mid .sub{font-size:9px;letter-spacing:1.6px;margin-top:2px}
+  .top .mid .bar{width:32px;margin-top:4px}
+  .top .addr{display:none}
 }
 nav.tabs{position:sticky;top:0;z-index:20;display:flex;gap:2px;overflow-x:auto;background:rgba(20,13,12,.94);backdrop-filter:blur(8px);border-bottom:1px solid var(--line);scrollbar-width:none}
 nav.tabs::-webkit-scrollbar{display:none}
