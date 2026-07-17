@@ -22,22 +22,33 @@ def bub_img(rating,d=12,gap=3):
     W=5*d+4*gap
     return '<img src="data:image/svg+xml;utf8,'+urllib.parse.quote(svg)+'" width="%d" height="%d" style="vertical-align:middle"/>'%(W,d)
 
-def tap_html():
+def _teaser(desc, n=66):
+    """One clean line for print: truncate long descriptions at a word boundary with an ellipsis."""
+    desc=desc.strip()
+    if len(desc)<=n:
+        return desc
+    return desc[:n].rsplit(' ',1)[0].rstrip(' ,;:—-')+'…'
+
+def tap_items(pred=lambda n: True):
+    """Render tap cards whose real tap number satisfies pred(n). Core = 1-7, rotating = 8+."""
     out=[]
     for idx,(name,origin,style,abv,ibu,desc,prices) in enumerate(D.TAP):
-        meta=" · ".join([x for x in [style,(abv+" ABV" if abv else ""),(ibu+" IBU" if ibu else "")] if x])
-        pr="   ".join('%s <b>€%s</b>'%(esc(sz),esc(p)) for sz,p in prices)
-        d='<div class="d">%s</div>'%esc(desc) if desc else ''
-        sc,cnt=(D.TAP_RATING[idx] if idx < len(D.TAP_RATING) else (0,0))
-        # Use the real tap number from the live feed (skips sold-out taps like 8/10);
-        # fall back to sequential only if TAP_NUM is unavailable (curated snapshot).
         _tn = getattr(D, 'TAP_NUM', None)
         tapno = _tn[idx] if (_tn and idx < len(_tn)) else idx+1
+        if not pred(tapno):
+            continue
+        meta=" · ".join([x for x in [style,(abv+" ABV" if abv else ""),(ibu+" IBU" if ibu else "")] if x])
+        pr="   ".join('%s <b>€%s</b>'%(esc(sz),esc(p)) for sz,p in prices)
+        d='<div class="d">%s</div>'%esc(_teaser(desc)) if desc else ''
+        sc,cnt=(D.TAP_RATING[idx] if idx < len(D.TAP_RATING) else (0,0))
         rate=''
         if sc:
             rate='<div class="rate">%s <span class="rs">%.2f</span> <span class="rc">%s ratings</span></div>'%(bub_img(sc),sc,D.kfmt(cnt))
         out.append('<div class="item"><div class="n"><span class="num">%d</span>%s</div>%s<div class="m">%s · %s</div>%s<div class="p">%s</div></div>'%(tapno,esc(name),rate,esc(meta),esc(origin),d,pr))
     return "".join(out)
+
+def tap_html():   # full list (kept for reference / any non-split use)
+    return tap_items()
 
 def bottle_html():
     out=[]
@@ -99,16 +110,16 @@ def css():
 .bg{position:fixed;top:-14mm;left:-13mm;width:210mm;height:297mm;background:'''+CREAM+''';z-index:-2}
 .bgband{position:fixed;top:-14mm;left:-13mm;width:210mm;height:66mm;background:linear-gradient(180deg,#fbf1dd,'''+CREAM+''');z-index:-1}
 body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
-.note{font-size:8pt;color:'''+MUT+''';font-style:italic;margin:0 0 8pt;border-left:2.5pt solid '''+GOLD+''';padding-left:8pt}
+.note{font-size:8pt;color:'''+MUT+''';font-style:italic;margin:0 0 6pt;border-left:2.5pt solid '''+GOLD+''';padding-left:8pt}
 .cols2{column-count:2;column-gap:15pt}
-.item{break-inside:avoid;margin-bottom:6.5pt;padding-bottom:5.5pt;border-bottom:.5pt solid #ecdcbf}
+.item{break-inside:avoid;margin-bottom:5pt;padding-bottom:4pt;border-bottom:.5pt solid #ecdcbf}
 .item .n{font-family:"Cormorant";font-weight:700;font-size:12.5pt;color:'''+CRIM+''';line-height:1.05}
 .item .num{display:inline-block;min-width:15pt;color:'''+GOLD+'''}
 .rate{margin:2.5pt 0 1pt}
 .rate .rs{font-family:"Jost";font-weight:600;font-size:8.4pt;color:#a9781a;vertical-align:middle}
 .rate .rc{font-size:6.6pt;color:'''+MUT+''';vertical-align:middle}
 .item .m{font-size:7.3pt;color:'''+DEEP+''';margin-top:1.5pt;font-weight:500}
-.item .d{font-size:7.3pt;color:#5a4a34;margin-top:2.5pt;line-height:1.32;font-style:italic}
+.item .d{font-size:7.2pt;color:#5a4a34;margin-top:2pt;line-height:1.3;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
 .item .p{font-size:8pt;margin-top:3pt;color:'''+MUT+'''}
 .item .p b{color:'''+CRIM+'''}
 .cat{break-inside:avoid;margin-bottom:8pt}
@@ -125,6 +136,19 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .bp2{font-size:7.4pt;color:'''+CRIM+''';font-weight:600}
 .content{padding-bottom:60mm}
 .bottomgroup{position:absolute;left:0;right:0;bottom:0}
+.sheet.brk{break-before:page}
+.footwrap{margin-top:8pt;break-inside:avoid}
+.qrzone{break-inside:avoid;margin-top:6pt}
+.qrhead{font-family:"Cormorant";font-weight:700;font-size:13pt;color:'''+CRIM+''';text-align:center;letter-spacing:.5pt;border-bottom:1pt solid '''+SOFTG+''';padding-bottom:3pt;margin-bottom:8pt}
+.qrrow{display:flex;justify-content:space-between;gap:10pt;align-items:flex-start}
+.qrrev{justify-content:center;gap:46pt;margin-top:4pt}
+.qrcell{flex:0 0 auto;text-align:center}
+.qrrow .qrcell img{width:72pt;height:72pt;display:block;margin:0 auto;border:1pt solid #e7d3ab;border-radius:4pt}
+.qrrev .qrcell img{width:72pt;height:72pt}
+.minicontact{font-family:"Jost";font-size:7.4pt;color:'''+DEEP+''';text-align:center;margin-top:6pt}
+.qcap{font-family:"Jost";font-weight:600;font-size:8pt;color:'''+CRIM+''';margin-top:3pt}
+.qsub{font-family:"Jost";font-size:6.6pt;color:'''+MUT+''';font-style:italic;margin-top:.5pt}
+.qrprompt{text-align:center;font-family:"Cormorant";font-style:italic;font-size:11pt;color:'''+DEEP+''';margin:5pt 0 4pt;padding:0 10pt}
 .contact{display:flex;justify-content:space-between;align-items:center;gap:16pt;border-top:1.5pt solid #C9963A;padding-top:9pt}
 .cemb{height:50pt}
 .cright{text-align:right}
@@ -133,7 +157,7 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .caddr{font-family:"Jost";font-size:8pt;color:#4A1019;margin-top:3pt}
 .csoc{font-family:"Jost";font-size:8pt;color:#6D1A28;margin-top:3pt}
 .csoc b{color:#6D1A28}
-.paystrip{background:#C9963A;border-radius:6pt;padding:8pt 12pt;text-align:center;margin:0 0 10pt;break-inside:avoid}
+.paystrip{background:#C9963A;border-radius:6pt;padding:6pt 12pt;text-align:center;margin:0 0 6pt;break-inside:avoid}
 .pl1{font-family:"Cormorant";font-weight:700;font-size:12pt;color:#4A1019}
 .pl2{font-family:"Jost";font-size:7.6pt;color:#4A1019;margin-top:2pt;line-height:1.35}
 .head{padding:0 0 9pt;margin-bottom:9pt;border-bottom:1.5pt solid #C9963A;text-align:left}
@@ -141,8 +165,8 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .hl{flex:0 0 auto}
 .hr{flex:0 0 auto;text-align:right}
 .hc{flex:1;text-align:center;padding-top:2pt}
-.llogo{height:92pt}
-.emblem{height:64pt;margin-top:6pt}
+.llogo{height:80pt}
+.emblem{height:56pt;margin-top:6pt}
 .hc h1{font-family:"Cormorant";font-weight:700;font-size:31pt;color:#6D1A28;line-height:1;margin:0 0 1pt}
 .hc .st{font-family:"Cormorant";font-weight:600;font-size:15pt;color:#4A1019;font-style:italic}
 .hc .tl{font-family:"Jost";font-size:8pt;color:#8a7256;letter-spacing:.5pt;margin-top:4pt}
@@ -157,18 +181,53 @@ def header(section, tagline):
             '<div class="hr"><img class="emblem" src="%s"/></div>'
             '</div></div>')%(CAMBA, esc(section), tl, EMBLEM)
 
+def qr_cell(img, cap, sub=''):
+    s='<div class="qsub">%s</div>'%esc(sub) if sub else ''
+    return '<div class="qrcell"><img src="%s"/><div class="qcap">%s</div>%s</div>'%(fpath('qr/'+img),esc(cap),s)
+
+QR_BLOCK = ('<div class="qrzone">'
+    '<div class="qrhead">Scan for more &nbsp;·&nbsp; Mehr entdecken</div>'
+    '<div class="qrrow">'
+    + qr_cell('food.png','Food Menu','Speisekarte')
+    + qr_cell('bottle.png','Bottled Beers','Flaschenbiere')
+    + qr_cell('other.png','Other Drinks','Weitere Getränke')
+    + qr_cell('wifi.png','Free WiFi','Gäste-WLAN')
+    + '</div>'
+    '<div class="qrprompt">Enjoyed your visit? A quick review means the world to us. &nbsp;/&nbsp; Hat es geschmeckt? Eine kurze Bewertung hilft uns sehr.</div>'
+    '<div class="qrrow qrrev">'
+    + qr_cell('google.png','Review on Google')
+    + qr_cell('tripadvisor.png','Review on Tripadvisor')
+    + '</div></div>')
+
+FOOT_TAP = (PAY + '<div class="minicontact">TapHouse Frankfurt · Mendelssohnstraße 51 · 60325 Frankfurt am Main · '
+            '+49 69 60660989 · taphousefrankfurt.com · Instagram / Facebook / Untappd @taphousefrankfurt</div>')
+
+def tap_body():
+    core = tap_items(lambda n: n <= 7)
+    rot  = tap_items(lambda n: n >= 8)
+    note1='<div class="note">Our core line-up — the regulars you can count on. Ratings are live from Untappd.</div>'
+    note2='<div class="note">Rotating taps 8–20 — our ever-changing guest selection, updated as kegs change. Scan any code on page&nbsp;1 for the always-current list.</div>'
+    sheet1=('<div class="sheet">'+header('Beers on Tap','“Spice amplifies hops. Hops cut spice.”')
+            +'<div class="fill">'+note1+'<div class="cols2">'+core+'</div>'+QR_BLOCK+'</div>'
+            +'<div class="footwrap">'+FOOT_TAP+'</div></div>')
+    sheet2=('<div class="sheet brk">'+header('Beers on Tap — Rotating','Taps 8–20 · changes often')
+            +'<div class="fill">'+note2+'<div class="cols2">'+rot+'</div></div>'
+            +'<div class="footwrap">'+FOOT_TAP+'</div></div>')
+    return '<div class="bg"></div><div class="bgband"></div>'+sheet1+sheet2
+
 def build(kind, outname):
-    cfg={
-     'tap':('Beers on Tap', tap_html, '“Spice amplifies hops. Hops cut spice.”',
-            '<div class="note">Tasting flight — choose any five 100&#8201;ml pours from our twenty taps. Ratings are live from Untappd.</div>'),
-     'bottle':('Bottled Beers', bottle_html, '',
-            '<div class="note">150+ varieties · all bottles available for takeaway at a reduced price.</div>'),
-     'other':('Other Than Beer', other_html, '', ''),
-    }[kind]
-    section, fn, tagline, note = cfg
-    inner=fn()
-    content = inner if kind=='other' else note+'<div class="cols2">'+inner+'</div>'
-    body=('<div class="bg"></div><div class="bgband"></div>'+header(section,tagline)+'<div class="content">'+content+'</div>'+'<div class="bottomgroup">'+PAY+CONTACT+'</div>')
+    if kind=='tap':
+        body=tap_body()
+    else:
+        cfg={
+         'bottle':('Bottled Beers', bottle_html, '',
+                '<div class="note">150+ varieties · all bottles available for takeaway at a reduced price.</div>'),
+         'other':('Other Than Beer', other_html, '', ''),
+        }[kind]
+        section, fn, tagline, note = cfg
+        inner=fn()
+        content = inner if kind=='other' else note+'<div class="cols2">'+inner+'</div>'
+        body=('<div class="bg"></div><div class="bgband"></div>'+header(section,tagline)+'<div class="content">'+content+'</div>'+'<div class="bottomgroup">'+PAY+CONTACT+'</div>')
     doc="<!DOCTYPE html><html><head><meta charset='utf-8'><style>"+css()+"</style></head><body>"+body+"</body></html>"
     out=os.path.join(PUB, outname)
     HTML(string=doc, base_url=HERE).write_pdf(out)
