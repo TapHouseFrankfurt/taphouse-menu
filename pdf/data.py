@@ -363,7 +363,7 @@ if _os.path.exists(_J):
         _desc = { t[0]: t[5] for t in TAP }
         if _live.get('tap'):
             TAP = [ (t['name'], t.get('loc',''), t.get('style',''), t.get('abv',''), t.get('ibu',''),
-                     _desc.get(t['name'],''), [tuple(p) for p in t.get('prices',[])]) for t in _live['tap'] ]
+                     (t.get('desc') or _desc.get(t['name'],'')), [tuple(p) for p in t.get('prices',[])]) for t in _live['tap'] ]
             TAP_RATING = [ tuple(t.get('rating',(0,0))) for t in _live['tap'] ]
             TAP_NUM = [ int(t['num']) if t.get('num') is not None else i+1 for i,t in enumerate(_live['tap']) ]
         if _live.get('bottle'):

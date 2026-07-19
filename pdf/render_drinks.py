@@ -22,15 +22,16 @@ def bub_img(rating,d=12,gap=3):
     W=5*d+4*gap
     return '<img src="data:image/svg+xml;utf8,'+urllib.parse.quote(svg)+'" width="%d" height="%d" style="vertical-align:middle"/>'%(W,d)
 
-def _teaser(desc, n=66):
-    """One clean line for print: truncate long descriptions at a word boundary with an ellipsis."""
+def _teaser(desc, n=132):
+    """Up to two clean lines for print: truncate long descriptions at a word boundary with an ellipsis."""
     desc=desc.strip()
     if len(desc)<=n:
         return desc
     return desc[:n].rsplit(' ',1)[0].rstrip(' ,;:—-')+'…'
 
-def tap_items(pred=lambda n: True):
-    """Render tap cards whose real tap number satisfies pred(n). Core = 1-7, rotating = 8+."""
+def tap_items(pred=lambda n: True, teaser_n=132):
+    """Render tap cards whose real tap number satisfies pred(n). Core = 1-7, rotating = 8+.
+    teaser_n controls description length: ~132 ≈ two lines, ~62 ≈ one line."""
     out=[]
     for idx,(name,origin,style,abv,ibu,desc,prices) in enumerate(D.TAP):
         _tn = getattr(D, 'TAP_NUM', None)
@@ -39,7 +40,8 @@ def tap_items(pred=lambda n: True):
             continue
         meta=" · ".join([x for x in [style,(abv+" ABV" if abv else ""),(ibu+" IBU" if ibu else "")] if x])
         pr="   ".join('%s <b>€%s</b>'%(esc(sz),esc(p)) for sz,p in prices)
-        d='<div class="d">%s</div>'%esc(_teaser(desc)) if desc else ''
+        cls='d' if teaser_n>=100 else 'd d1'
+        d='<div class="%s">%s</div>'%(cls,esc(_teaser(desc,teaser_n))) if desc else ''
         sc,cnt=(D.TAP_RATING[idx] if idx < len(D.TAP_RATING) else (0,0))
         rate=''
         if sc:
@@ -111,15 +113,16 @@ def css():
 body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .note{font-size:8pt;color:'''+MUT+''';font-style:italic;margin:0 0 6pt;border-left:2.5pt solid '''+GOLD+''';padding-left:8pt}
 .cols2{column-count:2;column-gap:15pt}
-.item{break-inside:avoid;margin-bottom:5pt;padding-bottom:4pt;border-bottom:.5pt solid #ecdcbf}
+.item{break-inside:avoid;margin-bottom:3.4pt;padding-bottom:2.6pt;border-bottom:.5pt solid #ecdcbf}
 .item .n{font-family:"Cormorant";font-weight:700;font-size:12.5pt;color:'''+CRIM+''';line-height:1.05}
 .item .num{display:inline-block;min-width:15pt;color:'''+GOLD+'''}
-.rate{margin:2.5pt 0 1pt}
+.rate{margin:1.5pt 0 .5pt}
 .rate .rs{font-family:"Jost";font-weight:600;font-size:8.4pt;color:#a9781a;vertical-align:middle}
 .rate .rc{font-size:6.6pt;color:'''+MUT+''';vertical-align:middle}
-.item .m{font-size:7.3pt;color:'''+DEEP+''';margin-top:1.5pt;font-weight:500}
-.item .d{font-size:7.2pt;color:#5a4a34;margin-top:2pt;line-height:1.3;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
-.item .p{font-size:8pt;margin-top:3pt;color:'''+MUT+'''}
+.item .m{font-size:7.3pt;color:'''+DEEP+''';margin-top:1pt;font-weight:500}
+.item .d{font-size:7pt;color:#5a4a34;margin-top:1.5pt;line-height:1.24;font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-height:18pt}
+.item .d1{-webkit-line-clamp:1;max-height:10pt}
+.item .p{font-size:8pt;margin-top:2pt;color:'''+MUT+'''}
 .item .p b{color:'''+CRIM+'''}
 .cat{break-inside:avoid;margin-bottom:8pt}
 .cat h3{font-family:"Cormorant";font-weight:700;font-size:12pt;letter-spacing:.5pt;color:'''+CRIM+''';border-bottom:1pt solid '''+SOFTG+''';padding-bottom:2pt;margin-bottom:3pt}
@@ -138,7 +141,7 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .sheet{display:flex;flex-direction:column;min-height:265mm}
 .sheet.brk{break-before:page}
 .fill{flex:1 0 auto}
-.footwrap{flex:0 0 auto;margin-top:8pt;break-inside:avoid}
+.footwrap{flex:0 0 auto;margin-top:5pt;break-inside:avoid}
 .foot{border-top:.6pt solid '''+GOLD+''';padding-top:5pt;display:flex;justify-content:space-between;align-items:baseline;gap:10pt}
 .foot .fl{font-family:"Jost";font-size:7.2pt;color:'''+DEEP+'''}
 .foot .fc{font-family:"Cormorant";font-style:italic;font-weight:600;font-size:9.5pt;color:'''+CRIM+'''}
@@ -213,18 +216,18 @@ FOOT_ROW = ('<div class="foot">'
             '</div>')
 
 def tap_body():
-    core = tap_items(lambda n: n <= 7)
-    rot  = tap_items(lambda n: n >= 8)
+    core = tap_items(lambda n: n <= 7, 132)   # core: up to 2 description lines
+    rot  = tap_items(lambda n: n >= 8, 132)   # rotating: up to 2 description lines
     note1='<div class="note">Tasting flight — choose any five 100&#8201;ml pours from our twenty taps. Ratings are live from Untappd.</div>'
     note2='<div class="note">Rotating taps 8–20 — our ever-changing tap selection, updated as kegs change. Scan any code on page&nbsp;1 for the always-current list.</div>'
-    # Page 1: no card-payments strip (frees space); branding + gold line bottom-aligned.
+    # Page 1 has spare room, so it carries the card-payments strip + branding (bottom-aligned).
     sheet1=('<div class="sheet">'+header('Beers on Tap','“Spice amplifies hops. Hops cut spice.”')
             +'<div class="fill">'+note1+'<div class="cols2">'+core+'</div>'+QR_BLOCK+'</div>'
-            +'<div class="footwrap">'+FOOT_ROW+'</div></div>')
-    # Page 2: branding gold line + card-payments strip, bottom-aligned.
+            +'<div class="footwrap">'+FOOT_ROW+PAY+'</div></div>')
+    # Page 2 keeps a slim branding gold line only — frees space for 2-line rotating descriptions.
     sheet2=('<div class="sheet brk">'+header('Beers on Tap — Rotating','Taps 8–20 · changes often')
             +'<div class="fill">'+note2+'<div class="cols2">'+rot+'</div></div>'
-            +'<div class="footwrap">'+FOOT_ROW+PAY+'</div></div>')
+            +'<div class="footwrap">'+FOOT_ROW+'</div></div>')
     return '<div class="bg"></div><div class="bgband"></div>'+sheet1+sheet2
 
 def build(kind, outname):
