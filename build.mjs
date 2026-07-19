@@ -49,7 +49,14 @@ function parseTap(lines){
     const m = L[i].match(/^(\d+)\.\s+(.*)/); let num=+m[1], name=m[2]; i++;
     while(i<L.length && !hasMeta(L[i]) && !hasPrice(L[i]) && !isStart(L[i])){ name+=' '+L[i]; i++; }
     let meta=''; if(i<L.length && hasMeta(L[i])){ meta=L[i]; i++; }
-    let desc=''; while(i<L.length && !hasPrice(L[i]) && !isStart(L[i])){ desc += (desc?' ':'')+L[i]; i++; }   // capture Untappd description
+    let desc=''; while(i<L.length && !hasPrice(L[i]) && !isStart(L[i])){   // capture Untappd description
+      const ln=L[i].trim(); i++;
+      if(!ln) continue;
+      if(hasMeta(ln)) continue;                              // stray "a • b • c" meta continuation
+      if(/^[•·]?\s*[\d.]+\s*(IBU|%\s*ABV)\b/i.test(ln)) continue;  // stray "• 29 IBU" / "5.2% ABV" line
+      desc += (desc?' ':'')+ln;
+    }
+    desc = desc.replace(/^[•·\s]+/, '').replace(/\s+/g,' ').trim();
     let price=''; if(i<L.length && hasPrice(L[i])){ price=L[i]; i++; }
     const segs = meta.split(' • ').map(s=>s.trim()).filter(Boolean);
     const loc = segs[0]||'';
