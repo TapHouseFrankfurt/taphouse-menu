@@ -40,7 +40,7 @@ def tap_items(pred=lambda n: True, teaser_n=132):
             continue
         meta=" · ".join([x for x in [style,(abv+" ABV" if abv else ""),(ibu+" IBU" if ibu else "")] if x])
         pr="   ".join('%s <b>€%s</b>'%(esc(sz),esc(p)) for sz,p in prices)
-        cls='d' if teaser_n>=100 else 'd d1'
+        cls='d d3' if teaser_n>=170 else ('d' if teaser_n>=100 else 'd d1')
         d='<div class="%s">%s</div>'%(cls,esc(_teaser(desc,teaser_n))) if desc else ''
         sc,cnt=(D.TAP_RATING[idx] if idx < len(D.TAP_RATING) else (0,0))
         rate=''
@@ -122,6 +122,7 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .item .m{font-size:7.3pt;color:'''+DEEP+''';margin-top:1pt;font-weight:500}
 .item .d{font-size:7pt;color:#5a4a34;margin-top:1.5pt;line-height:1.24;font-style:italic;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-height:18pt}
 .item .d1{-webkit-line-clamp:1;max-height:10pt}
+.item .d3{-webkit-line-clamp:3;max-height:27pt}
 .item .p{font-size:8pt;margin-top:2pt;color:'''+MUT+'''}
 .item .p b{color:'''+CRIM+'''}
 .cat{break-inside:avoid;margin-bottom:8pt}
@@ -217,7 +218,7 @@ FOOT_ROW = ('<div class="foot">'
 
 def tap_body():
     core = tap_items(lambda n: n <= 7, 132)   # core: up to 2 description lines
-    rot  = tap_items(lambda n: n >= 8, 132)   # rotating: up to 2 description lines
+    rot  = tap_items(lambda n: n >= 8, 200)   # rotating: up to 3 description lines (page 2 has room)
     note1='<div class="note">Tasting flight — choose any five 100&#8201;ml pours from our twenty taps. Ratings are live from Untappd.</div>'
     note2='<div class="note">Rotating taps 8–20 — our ever-changing tap selection, updated as kegs change. Scan any code on page&nbsp;1 for the always-current list.</div>'
     # Page 1 has spare room, so it carries the card-payments strip + branding (bottom-aligned).
