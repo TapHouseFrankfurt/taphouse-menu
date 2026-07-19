@@ -49,7 +49,7 @@ function parseTap(lines){
     const m = L[i].match(/^(\d+)\.\s+(.*)/); let num=+m[1], name=m[2]; i++;
     while(i<L.length && !hasMeta(L[i]) && !hasPrice(L[i]) && !isStart(L[i])){ name+=' '+L[i]; i++; }
     let meta=''; if(i<L.length && hasMeta(L[i])){ meta=L[i]; i++; }
-    while(i<L.length && !hasPrice(L[i]) && !isStart(L[i])) i++;   // skip description
+    let desc=''; while(i<L.length && !hasPrice(L[i]) && !isStart(L[i])){ desc += (desc?' ':'')+L[i]; i++; }   // capture Untappd description
     let price=''; if(i<L.length && hasPrice(L[i])){ price=L[i]; i++; }
     const segs = meta.split(' • ').map(s=>s.trim()).filter(Boolean);
     const loc = segs[0]||'';
@@ -61,7 +61,7 @@ function parseTap(lines){
       let sz = pm[1].replace(/Draft/ig,'').replace(/\(flight only\)/ig,'(flight)').replace(/\s+/g,' ').trim();
       prices.push([sz, pm[2]]);
     }
-    items.push({ num, name:name.replace(/\s+/g,' ').trim(), loc, style, abv, ibu, prices });
+    items.push({ num, name:name.replace(/\s+/g,' ').trim(), loc, style, abv, ibu, prices, desc: desc.replace(/\s+/g,' ').trim() });
   }
   return items;
 }
@@ -126,7 +126,7 @@ function tapPanel(items, rmap){
     const pills = it.prices.map(([s,p])=>`<span class="pill">${esc(s)} <b>€${esc(p)}</b></span>`).join('');
     const r = rmap[norm(it.name)];
     const rate = r ? `<div class="rate">${bubbles(r[0])}<span class="rscore">${r[0].toFixed(2)}</span><span class="rcount">${kfmt(r[1])} ratings</span></div>` : '';
-    return `<div class="card"><div class="cardhead"><h3><span class="tnum">${it.num}</span>${esc(it.name)}</h3></div>${rate}<div class="meta">${esc(meta)}</div><div class="origin">◍ ${esc(it.loc)}</div><div class="prices">${pills}</div></div>`;
+    return `<div class="card"><div class="cardhead"><h3><span class="tnum">${it.num}</span>${esc(it.name)}</h3></div>${rate}<div class="meta">${esc(meta)}</div><div class="origin">◍ ${esc(it.loc)}</div>${it.desc?`<div class="cdesc">${esc(it.desc)}</div>`:''}<div class="prices">${pills}</div></div>`;
   }).join('');
   return `<div class="tapnote"><b>🍺 Tasting flight</b> — choose any five 100&nbsp;ml pours from our twenty taps. Ratings are live from Untappd.</div>${cards}`;
 }
@@ -181,6 +181,7 @@ nav.tabs button.active{color:var(--cream);border-bottom:3px solid var(--gold)}
 .rcount{font-size:10.5px;color:var(--mut);letter-spacing:.3px}
 .meta{font-size:12.5px;font-weight:500;margin-top:8px;color:var(--gold)}
 .origin{font-size:11.5px;color:var(--mut);margin-top:2px}
+.cdesc{font-size:12px;line-height:1.5;color:var(--cream);opacity:.82;margin-top:9px}
 .prices{margin-top:12px;display:flex;flex-wrap:wrap;gap:7px}
 .pill{background:rgba(227,173,70,.08);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--mut)}
 .pill b{color:var(--yellow);font-weight:700}
@@ -320,7 +321,7 @@ async function main(){
   // Emit the parsed live feed as JSON so the Python PDF renderer (pdf/render_drinks.py)
   // builds the drinks PDFs from the same data. Curated descriptions/spirits stay in pdf/data.py.
   try{
-    const dj={ tap: tap.map(t=>({num:t.num,name:t.name,loc:t.loc,style:t.style,abv:t.abv,ibu:t.ibu,prices:t.prices,rating:rmap[norm(t.name)]||[0,0]})),
+    const dj={ tap: tap.map(t=>({num:t.num,name:t.name,loc:t.loc,style:t.style,abv:t.abv,ibu:t.ibu,prices:t.prices,desc:t.desc||'',rating:rmap[norm(t.name)]||[0,0]})),
                bottle: Object.fromEntries(Object.entries(bottle).map(([c,it])=>[c, it.map(b=>({name:b.name,loc:b.loc,style:b.style,abv:b.abv,size:b.size,price:b.price}))])) };
     writeFileSync(join(PUB,'_drinks.json'), JSON.stringify(dj));
     console.log('Wrote _drinks.json:', dj.tap.length, 'taps');
