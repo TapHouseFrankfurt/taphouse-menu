@@ -341,6 +341,15 @@ async function main(){
   }catch(e){ console.log('_drinks.json skipped', e.message); }
   const files=build(tap,bottle,other,rmap,emblem,stamp);
   for(const [name,html] of Object.entries(files)){ const fp=join(PUB,name); mkdirSync(dirname(fp),{recursive:true}); writeFileSync(fp,html); }
+  // sitemap + robots so search engines / AI crawlers discover every menu page
+  try{
+    const _d=new Date().toISOString().slice(0,10);
+    const _urls=['','tap-beers/','bottle-beers/','other-drinks/','food.html'];
+    const _sm='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+_urls.map(u=>`  <url><loc>https://menu.taphousefrankfurt.com/${u}</loc><lastmod>${_d}</lastmod><changefreq>daily</changefreq></url>`).join('\n')+'\n</urlset>\n';
+    writeFileSync(join(PUB,'sitemap.xml'),_sm);
+    writeFileSync(join(PUB,'robots.txt'),'User-agent: *\nAllow: /\nSitemap: https://menu.taphousefrankfurt.com/sitemap.xml\n');
+    console.log('Wrote sitemap.xml + robots.txt');
+  }catch(e){ console.log('sitemap skipped', e.message); }
   console.log('Wrote', Object.keys(files).join(', '), '-> public/');
 }
 if(process.argv[1] && process.argv[1].endsWith('build.mjs')) main().catch(e=>{console.error('BUILD FAILED:',e.message); process.exit(1);});
