@@ -260,6 +260,11 @@ function _biz(menuObj){ return ({
   "description":"Craft beer bar with a modern Indian kitchen in Frankfurt am Main (Westend). 20 rotating taps, 120+ bottled beers, wine, spirits and alcohol-free options.",
   "servesCuisine":["Craft Beer","Indian"],"priceRange":"€€","telephone":"+49 69 60660989",
   "url":"https://www.taphousefrankfurt.com/","acceptsReservations":true,
+  "openingHoursSpecification":[
+    {"@type":"OpeningHoursSpecification","dayOfWeek":["Tuesday","Wednesday","Thursday","Friday"],"opens":"16:00","closes":"00:00"},
+    {"@type":"OpeningHoursSpecification","dayOfWeek":"Saturday","opens":"12:00","closes":"00:00"},
+    {"@type":"OpeningHoursSpecification","dayOfWeek":"Sunday","opens":"12:00","closes":"23:00"}
+  ],
   "address":{"@type":"PostalAddress","streetAddress":"Mendelssohnstraße 51","postalCode":"60325","addressLocality":"Frankfurt am Main","addressRegion":"Hessen","addressCountry":"DE"},
   "hasMenu":menuObj }); }
 function _menu(name, sections){ return {"@type":"Menu","name":name,"inLanguage":"en","hasMenuSection":sections.filter(x=>x.items.length).map(sec=>({"@type":"MenuSection","name":sec.name,
