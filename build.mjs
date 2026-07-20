@@ -348,7 +348,8 @@ async function main(){
     const _sm='<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n'+_urls.map(u=>`  <url><loc>https://menu.taphousefrankfurt.com/${u}</loc><lastmod>${_d}</lastmod><changefreq>daily</changefreq></url>`).join('\n')+'\n</urlset>\n';
     writeFileSync(join(PUB,'sitemap.xml'),_sm);
     writeFileSync(join(PUB,'robots.txt'),'User-agent: *\nAllow: /\nSitemap: https://menu.taphousefrankfurt.com/sitemap.xml\n');
-    console.log('Wrote sitemap.xml + robots.txt');
+    writeFileSync(join(PUB,'google15c3b10015850243.html'),'google-site-verification: google15c3b10015850243.html');
+    console.log('Wrote sitemap.xml + robots.txt + GSC verification file');
   }catch(e){ console.log('sitemap skipped', e.message); }
   console.log('Wrote', Object.keys(files).join(', '), '-> public/');
 }
