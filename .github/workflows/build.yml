@@ -27,6 +27,8 @@ jobs:
       - run: npm install --no-audit --no-fund
       - name: Build menus + emit _drinks.json from live Untappd data
         run: node build.mjs
+        env:
+          UNTAPPD_API_TOKEN: ${{ secrets.UNTAPPD_API_TOKEN }}
       # ---- Drinks PDFs (light print, match the food menu) auto-refreshed from the feed ----
       # Non-fatal: if this fails, the HTML menus still deploy and the committed static
       # drinks PDFs (copied by build.mjs) remain as a fallback, so QR codes never break.
