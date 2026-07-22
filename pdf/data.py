@@ -367,7 +367,7 @@ if _os.path.exists(_J):
             TAP_RATING = [ tuple(t.get('rating',(0,0))) for t in _live['tap'] ]
             TAP_NUM = [ int(t['num']) if t.get('num') is not None else i+1 for i,t in enumerate(_live['tap']) ]
         if _live.get('bottle'):
-            BOTTLE = { cat: [ (b['name'], b.get('loc',''), b.get('style',''), b.get('abv',''), b.get('size',''), b.get('price','')) for b in items ]
+            BOTTLE = { cat: [ (b['name'], b.get('loc',''), b.get('style',''), b.get('abv',''), b.get('size',''), b.get('price',''), tuple(b.get('rating',(0,0)))) for b in items ]
                        for cat, items in _live['bottle'].items() }
         print('drinks.json override applied:', len(TAP), 'taps,', sum(len(v) for v in BOTTLE.values()), 'bottles')
     except Exception as _e:

@@ -56,8 +56,13 @@ def bottle_html():
     out=[]
     for cat,items in D.BOTTLE.items():
         rows=[]
-        for name,origin,style,abv,size,price in items:
-            rows.append('<div class="brow"><div class="bl"><span class="bn">%s</span><span class="bm">%s · %s · %s</span></div><div class="br"><span class="bs">%s</span><span class="bp">€%s</span></div></div>'%(esc(name),esc(style),esc(abv),esc(origin),esc(size),esc(price)))
+        for row in items:
+            name,origin,style,abv,size,price = row[0],row[1],row[2],row[3],row[4],row[5]
+            sc,cnt = (row[6] if len(row)>6 else (0,0))
+            # Bottle ratings held until we have coverage for most bottles (~9/121 now). Flip HOLD to False to enable.
+            _HOLD_BOTTLE_RATINGS=True
+            rate='' if _HOLD_BOTTLE_RATINGS or not sc else ' <span class="brate">%s <span class="brs">%.2f</span></span>'%(bub_img(sc,d=8,gap=2),sc)
+            rows.append('<div class="brow"><div class="bl"><span class="bn">%s</span>%s<span class="bm">%s · %s · %s</span></div><div class="br"><span class="bs">%s</span><span class="bp">€%s</span></div></div>'%(esc(name),rate,esc(style),esc(abv),esc(origin),esc(size),esc(price)))
         out.append('<div class="cat"><h3>%s <span class="cc">%d</span></h3>%s</div>'%(esc(cat),len(items),"".join(rows)))
     return "".join(out)
 
@@ -80,7 +85,7 @@ def other_html():
         return "".join(r)
     wine='<div class="cat"><h3>Wine</h3>%s%s</div><div class="cat"><h3>Alcohol-Free Wine</h3>%s</div>'%(wn(D.WINE),wn(D.WINE_SPECIAL),wn(D.WINE_NA))
     def sm(items): return "".join('<div class="brow"><div class="bl"><span class="bn">%s</span></div><div class="br"><span class="bp2">%s</span></div></div>'%(esc(n),esc(p)) for n,p in items)
-    return '<div class="note">%s. Spirit prices: 4cl (single) / 2cl.</div><div class="cols2">%s%s<div class="cat"><h3>Softdrinks</h3>%s</div><div class="cat"><h3>Coffee</h3>%s</div></div>'%(esc(D.MIXERS),spirit+afblock,wine,sm(D.SOFT),sm(D.COFFEE))
+    return '<div class="omenu"><div class="note">%s. Spirit prices: 4cl (single) / 2cl.</div><div class="cols2">%s%s<div class="cat"><h3>Softdrinks</h3>%s</div><div class="cat"><h3>Coffee</h3>%s</div></div><div class="oclose">Prefer a guided journey through our drinks? Ask our team about beer flights &amp; pairings.<div class="ocde">Lieber verkosten? Fragen Sie unser Team nach Bier-Flights &amp; Pairings.</div></div></div>'%(esc(D.MIXERS),spirit+afblock,wine,sm(D.SOFT),sm(D.COFFEE))
 
 EMBLEM=fpath('emblem.png')
 PAY=('<div class="paystrip"><div class="pl1">Kartenzahlung willkommen · Bargeld sowieso &nbsp;/&nbsp; Card payments welcome · Cash, of course</div>'
@@ -128,10 +133,27 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .cat{break-inside:avoid;margin-bottom:8pt}
 .cat h3{font-family:"Cormorant";font-weight:700;font-size:12pt;letter-spacing:.5pt;color:'''+CRIM+''';border-bottom:1pt solid '''+SOFTG+''';padding-bottom:2pt;margin-bottom:3pt}
 .cat h3 .cc{color:'''+GOLD+''';font-size:8.5pt;font-family:"Jost"}
+/* ---- Other Than Beer: warmer, richer treatment ---- */
+.omenu{font-size:8.4pt}
+.omenu .cat{margin-bottom:11pt}
+.omenu .cat h3{font-size:13pt;letter-spacing:.7pt;color:'''+CRIM+''';border-bottom:1.6pt solid '''+GOLD+''';padding-bottom:3pt;margin-bottom:5pt;display:flex;align-items:baseline;gap:6pt}
+.omenu .cat h3::before{content:"◆";color:'''+GOLD+''';font-size:7.5pt;position:relative;top:-1pt}
+.omenu .brow{padding:3.4pt 0;border-bottom:.5pt solid #ecd9b4}
+.omenu .brow:nth-of-type(even){background:rgba(201,150,58,.07)}
+.omenu .bn{color:'''+CRIM+''';font-size:8.6pt;font-weight:700;font-family:"Cormorant";letter-spacing:.2pt}
+.omenu .bm{color:'''+DEEP+''';font-size:7.1pt}
+.omenu .bp,.omenu .bp2{color:'''+CRIM+''';font-weight:700}
+.omenu .bsub{color:'''+MUT+'''}
+.omenu .note{font-size:8.2pt}
+.omenu .oclose{text-align:center;margin:20pt 6pt 0;padding-top:11pt;border-top:1.2pt solid '''+GOLD+''';font-family:"Cormorant";font-style:italic;font-weight:600;font-size:12.5pt;color:'''+CRIM+'''}
+.omenu .oclose::before{content:"◆";display:block;color:'''+GOLD+''';font-size:8.5pt;margin-bottom:6pt;font-style:normal}
+.omenu .oclose .ocde{font-size:9.5pt;color:'''+MUT+''';font-weight:400;margin-top:2pt}
 .brow{display:flex;justify-content:space-between;gap:6pt;align-items:baseline;padding:2.3pt 0;border-bottom:.4pt dotted #e2cfa8}
 .bl{flex:1}
 .bn{font-size:8pt;font-weight:600;color:'''+INK+'''}
 .bm{display:block;font-size:6.9pt;color:'''+MUT+''';margin-top:.5pt}
+.brate{white-space:nowrap;margin-left:5pt}
+.brate .brs{font-family:"Jost";font-weight:600;font-size:7pt;color:#a9781a;vertical-align:middle}
 .br{text-align:right;white-space:nowrap}
 .bs{font-size:6.7pt;color:#b09b78;margin-right:4pt}
 .bp{font-family:"Cormorant";font-weight:700;font-size:10.5pt;color:'''+CRIM+'''}
