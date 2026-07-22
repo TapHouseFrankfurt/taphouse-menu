@@ -132,8 +132,8 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .item .p{font-size:8pt;margin-top:2pt;color:'''+MUT+'''}
 .item .p b{color:'''+CRIM+'''}
 .cat{break-inside:avoid;margin-bottom:8pt}
-.cat h3{font-family:"Cormorant";font-weight:700;font-size:12pt;letter-spacing:.5pt;color:'''+CRIM+''';border-bottom:1pt solid '''+SOFTG+''';padding-bottom:2pt;margin-bottom:3pt}
-.cat h3 .cc{color:'''+GOLD+''';font-size:8.5pt;font-family:"Jost"}
+.cat h3{font-family:"Cormorant";font-weight:700;font-size:14pt;letter-spacing:.5pt;color:'''+CRIM+''';border-bottom:1pt solid '''+SOFTG+''';padding-bottom:2pt;margin-bottom:3pt}
+.cat h3 .cc{color:'''+GOLD+''';font-size:10.5pt;font-family:"Jost"}
 /* ---- Other Than Beer: warmer, richer treatment ---- */
 .omenu{font-size:9.4pt}
 .omenu .cat{margin-bottom:13pt}
@@ -153,16 +153,18 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .omenu .oclose .ocde{font-size:11pt;color:'''+MUT+''';font-weight:400;margin-top:3pt}
 .brow{display:flex;justify-content:space-between;gap:6pt;align-items:baseline;padding:2.3pt 0;border-bottom:.4pt dotted #e2cfa8}
 .bl{flex:1}
-.bn{font-size:8pt;font-weight:600;color:'''+INK+'''}
-.bm{display:block;font-size:6.9pt;color:'''+MUT+''';margin-top:.5pt}
+.bn{font-size:10pt;font-weight:600;color:'''+INK+'''}
+.bm{display:block;font-size:8.9pt;color:'''+MUT+''';margin-top:.5pt}
 .brate{white-space:nowrap;margin-left:5pt}
-.brate .brs{font-family:"Jost";font-weight:600;font-size:7pt;color:#a9781a;vertical-align:middle}
+.brate .brs{font-family:"Jost";font-weight:600;font-size:9pt;color:#a9781a;vertical-align:middle}
 .br{text-align:right;white-space:nowrap}
-.bs{font-size:6.7pt;color:#b09b78;margin-right:4pt}
-.bp{font-family:"Cormorant";font-weight:700;font-size:10.5pt;color:'''+CRIM+'''}
-.bsub{display:block;font-size:7pt;color:'''+MUT+''';margin-top:.5pt}
-.bp2{font-size:7.4pt;color:'''+CRIM+''';font-weight:600}
+.bs{font-size:8.7pt;color:#b09b78;margin-right:4pt}
+.bp{font-family:"Cormorant";font-weight:700;font-size:12.5pt;color:'''+CRIM+'''}
+.bsub{display:block;font-size:9pt;color:'''+MUT+''';margin-top:.5pt}
+.bp2{font-size:9.4pt;color:'''+CRIM+''';font-weight:600}
 .content{padding-bottom:60mm}
+.content.bcontent{padding-bottom:0}
+.bottomflow{margin-top:7mm;break-inside:avoid;min-height:262mm;display:flex;flex-direction:column;justify-content:flex-end}
 .bottomgroup{position:absolute;left:0;right:0;bottom:0}
 .sheet{display:flex;flex-direction:column;min-height:265mm}
 .sheet.brk{break-before:page}
@@ -268,7 +270,11 @@ def build(kind, outname):
         section, fn, tagline, note = cfg
         inner=fn()
         content = inner if kind=='other' else note+'<div class="cols2">'+inner+'</div>'
-        body=('<div class="bg"></div><div class="bgband"></div>'+header(section,tagline)+'<div class="content">'+content+'</div>'+'<div class="bottomgroup">'+PAY+CONTACT+'</div>')
+        if kind=='bottle':
+            # Multi-page list: let the footer flow after the last bottle (avoids overlap on a full final page).
+            body=('<div class="bg"></div><div class="bgband"></div>'+header(section,tagline)+'<div class="content bcontent">'+content+'</div>'+'<div class="bottomflow">'+PAY+CONTACT+'</div>')
+        else:
+            body=('<div class="bg"></div><div class="bgband"></div>'+header(section,tagline)+'<div class="content">'+content+'</div>'+'<div class="bottomgroup">'+PAY+CONTACT+'</div>')
     doc="<!DOCTYPE html><html><head><meta charset='utf-8'><style>"+css()+"</style></head><body>"+body+"</body></html>"
     out=os.path.join(PUB, outname)
     HTML(string=doc, base_url=HERE).write_pdf(out)
