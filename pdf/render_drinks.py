@@ -45,7 +45,8 @@ def tap_items(pred=lambda n: True, teaser_n=132):
         sc,cnt=(D.TAP_RATING[idx] if idx < len(D.TAP_RATING) else (0,0))
         rate=''
         if sc:
-            rate='<div class="rate">%s <span class="rs">%.2f</span> <span class="rc">%s ratings</span></div>'%(bub_img(sc),sc,D.kfmt(cnt))
+            rc=' <span class="rc">%s ratings</span>'%D.kfmt(cnt) if cnt else ''
+            rate='<div class="rate">%s <span class="rs">%.2f</span>%s</div>'%(bub_img(sc),sc,rc)
         out.append('<div class="item"><div class="n"><span class="num">%d</span>%s</div>%s<div class="m">%s · %s</div>%s<div class="p">%s</div></div>'%(tapno,esc(name),rate,esc(meta),esc(origin),d,pr))
     return "".join(out)
 
