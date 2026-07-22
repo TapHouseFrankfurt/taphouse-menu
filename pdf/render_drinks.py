@@ -61,7 +61,7 @@ def bottle_html():
             name,origin,style,abv,size,price = row[0],row[1],row[2],row[3],row[4],row[5]
             sc,cnt = (row[6] if len(row)>6 else (0,0))
             # Bottle ratings held until we have coverage for most bottles (~9/121 now). Flip HOLD to False to enable.
-            _HOLD_BOTTLE_RATINGS=True
+            _HOLD_BOTTLE_RATINGS=False
             rate='' if _HOLD_BOTTLE_RATINGS or not sc else ' <span class="brate">%s <span class="brs">%.2f</span></span>'%(bub_img(sc,d=8,gap=2),sc)
             rows.append('<div class="brow"><div class="bl"><span class="bn">%s</span>%s<span class="bm">%s · %s · %s</span></div><div class="br"><span class="bs">%s</span><span class="bp">€%s</span></div></div>'%(esc(name),rate,esc(style),esc(abv),esc(origin),esc(size),esc(price)))
         out.append('<div class="cat"><h3>%s <span class="cc">%d</span></h3>%s</div>'%(esc(cat),len(items),"".join(rows)))
