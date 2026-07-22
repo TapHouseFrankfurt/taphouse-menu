@@ -135,20 +135,22 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .cat h3{font-family:"Cormorant";font-weight:700;font-size:12pt;letter-spacing:.5pt;color:'''+CRIM+''';border-bottom:1pt solid '''+SOFTG+''';padding-bottom:2pt;margin-bottom:3pt}
 .cat h3 .cc{color:'''+GOLD+''';font-size:8.5pt;font-family:"Jost"}
 /* ---- Other Than Beer: warmer, richer treatment ---- */
-.omenu{font-size:8.4pt}
-.omenu .cat{margin-bottom:11pt}
-.omenu .cat h3{font-size:13pt;letter-spacing:.7pt;color:'''+CRIM+''';border-bottom:1.6pt solid '''+GOLD+''';padding-bottom:3pt;margin-bottom:5pt;display:flex;align-items:baseline;gap:6pt}
-.omenu .cat h3::before{content:"◆";color:'''+GOLD+''';font-size:7.5pt;position:relative;top:-1pt}
-.omenu .brow{padding:3.4pt 0;border-bottom:.5pt solid #ecd9b4}
+.omenu{font-size:9.4pt}
+.omenu .cat{margin-bottom:13pt}
+.omenu .cat h3{font-size:14.5pt;letter-spacing:.7pt;color:'''+CRIM+''';border-bottom:1.6pt solid '''+GOLD+''';padding-bottom:3.5pt;margin-bottom:6pt;display:flex;align-items:baseline;gap:6pt}
+.omenu .cat h3::before{content:"◆";color:'''+GOLD+''';font-size:8.5pt;position:relative;top:-1pt}
+.omenu .brow{padding:5pt 0;border-bottom:.5pt solid #ecd9b4}
 .omenu .brow:nth-of-type(even){background:rgba(201,150,58,.07)}
-.omenu .bn{color:'''+CRIM+''';font-size:8.6pt;font-weight:700;font-family:"Cormorant";letter-spacing:.2pt}
-.omenu .bm{color:'''+DEEP+''';font-size:7.1pt}
+.omenu .bn{color:'''+CRIM+''';font-size:9.9pt;font-weight:700;font-family:"Cormorant";letter-spacing:.2pt}
+.omenu .bm{color:'''+DEEP+''';font-size:8pt}
 .omenu .bp,.omenu .bp2{color:'''+CRIM+''';font-weight:700}
-.omenu .bsub{color:'''+MUT+'''}
-.omenu .note{font-size:8.2pt}
-.omenu .oclose{text-align:center;margin:20pt 6pt 0;padding-top:11pt;border-top:1.2pt solid '''+GOLD+''';font-family:"Cormorant";font-style:italic;font-weight:600;font-size:12.5pt;color:'''+CRIM+'''}
-.omenu .oclose::before{content:"◆";display:block;color:'''+GOLD+''';font-size:8.5pt;margin-bottom:6pt;font-style:normal}
-.omenu .oclose .ocde{font-size:9.5pt;color:'''+MUT+''';font-weight:400;margin-top:2pt}
+.omenu .bp{font-size:12pt}
+.omenu .bp2{font-size:8.7pt}
+.omenu .bsub{color:'''+MUT+''';font-size:8pt}
+.omenu .note{font-size:9.2pt}
+.omenu .oclose{text-align:center;margin:22pt 6pt 0;padding-top:13pt;border-top:1.2pt solid '''+GOLD+''';font-family:"Cormorant";font-style:italic;font-weight:600;font-size:14.5pt;color:'''+CRIM+'''}
+.omenu .oclose::before{content:"◆";display:block;color:'''+GOLD+''';font-size:9pt;margin-bottom:7pt;font-style:normal}
+.omenu .oclose .ocde{font-size:11pt;color:'''+MUT+''';font-weight:400;margin-top:3pt}
 .brow{display:flex;justify-content:space-between;gap:6pt;align-items:baseline;padding:2.3pt 0;border-bottom:.4pt dotted #e2cfa8}
 .bl{flex:1}
 .bn{font-size:8pt;font-weight:600;color:'''+INK+'''}

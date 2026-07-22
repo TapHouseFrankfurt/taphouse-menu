@@ -369,6 +369,16 @@ if _os.path.exists(_J):
         if _live.get('bottle'):
             BOTTLE = { cat: [ (b['name'], b.get('loc',''), b.get('style',''), b.get('abv',''), b.get('size',''), b.get('price',''), tuple(b.get('rating',(0,0)))) for b in items ]
                        for cat, items in _live['bottle'].items() }
-        print('drinks.json override applied:', len(TAP), 'taps,', sum(len(v) for v in BOTTLE.values()), 'bottles')
+        _o = _live.get('other')
+        if _o:  # non-beer drinks: live prices/ABV from Untappd (names/labels/sizes curated)
+            if _o.get('mixers'):        MIXERS = _o['mixers']
+            if _o.get('spirits'):       SPIRITS = { sec: [tuple(r) for r in rows] for sec, rows in _o['spirits'].items() }
+            if _o.get('af_cocktails'):  AF_COCKTAILS = [tuple(r) for r in _o['af_cocktails']]
+            if _o.get('wine'):          WINE = [tuple(r) for r in _o['wine']]
+            if _o.get('wine_special'):  WINE_SPECIAL = [tuple(r) for r in _o['wine_special']]
+            if _o.get('wine_na'):       WINE_NA = [tuple(r) for r in _o['wine_na']]
+            if _o.get('soft'):          SOFT = [tuple(r) for r in _o['soft']]
+            if _o.get('coffee'):        COFFEE = [tuple(r) for r in _o['coffee']]
+        print('drinks.json override applied:', len(TAP), 'taps,', sum(len(v) for v in BOTTLE.values()), 'bottles,', ('other' if _o else 'no-other'))
     except Exception as _e:
         print('drinks.json override skipped:', _e)
