@@ -332,15 +332,15 @@ async function fetchUntappdRatings(){
       for(const sec of sections){
         const items = sec.items || sec.section_items || [];
         for(const it of items){
+          if(!globalThis.__utfbItemLogged){ globalThis.__utfbItemLogged=true; try{ console.log('UTFB sample item:', JSON.stringify(it).slice(0,700)); }catch(_e){} }
           const beer = it.beer || it;
-          const name = beer.name || it.name;
+          const bname = beer.name || it.name;                      // Untappd canonical beer name ("Pale Ale")
+          const disp  = it.name || it.display_name || it.custom_name || bname; // venue display name (matches the print PDF)
           const brewery = beer.brewery || it.brewery || '';
           const rat  = (beer.rating!=null ? beer.rating : (it.rating!=null?it.rating:(it.custom_rating!=null?it.custom_rating:null)));
           const cnt  = beer.rating_count || beer.total_user_count || it.rating_count || it.total_count || 0;
-          if(name && rat){ const r=[Number(rat), Number(cnt)||0];
-            map[norm(name)] = r;                                   // "Hell"
-            if(brewery){ map[norm(brewery+' '+name)] = r;          // "Camba Bavaria Hell" (our menu format)
-                         map[norm(name+' '+brewery)] = r; } }
+          if(rat){ const r=[Number(rat), Number(cnt)||0];
+            for(const key of [disp, bname, brewery&&(brewery+' '+bname), brewery&&(bname+' '+brewery)]){ if(key) map[norm(key)] = r; } }
         }
       }
     }
