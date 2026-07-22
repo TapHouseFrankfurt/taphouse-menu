@@ -334,9 +334,13 @@ async function fetchUntappdRatings(){
         for(const it of items){
           const beer = it.beer || it;
           const name = beer.name || it.name;
+          const brewery = beer.brewery || it.brewery || '';
           const rat  = (beer.rating!=null ? beer.rating : (it.rating!=null?it.rating:(it.custom_rating!=null?it.custom_rating:null)));
           const cnt  = beer.rating_count || beer.total_user_count || it.rating_count || it.total_count || 0;
-          if(name && rat){ map[norm(name)] = [Number(rat), Number(cnt)||0]; }
+          if(name && rat){ const r=[Number(rat), Number(cnt)||0];
+            map[norm(name)] = r;                                   // "Hell"
+            if(brewery){ map[norm(brewery+' '+name)] = r;          // "Camba Bavaria Hell" (our menu format)
+                         map[norm(name+' '+brewery)] = r; } }
         }
       }
     }
