@@ -108,7 +108,7 @@ function norm(s){
     .replace(/\s+/g,' ').trim();
 }
 export { parseTap, parseBottle, norm };
-export const __test = { get apiTapBottle(){ return apiTapBottle; }, get bnorm(){ return bnorm; }, get styleToCat(){ return styleToCat; } };
+export const __test = { get apiTapBottle(){ return apiTapBottle; }, get bnorm(){ return bnorm; }, get styleToCat(){ return styleToCat; }, get bottlePanel(){ return bottlePanel; } };
 
 // ============ GENERATOR (dark digital) ============
 const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -138,11 +138,16 @@ function tapPanel(items, rmap){
   }).join('');
   return `<div class="tapnote"><b>🍺 Tasting flight</b> — choose any five 100&nbsp;ml pours from our twenty taps. Ratings are live from Untappd.</div>${cards}`;
 }
-function bottlePanel(groups){
+function bottlePanel(groups, rmap){
   const cats=Object.keys(groups);
   const chips='<button class="chip active" data-cat="all">All</button>'+cats.map(c=>`<button class="chip" data-cat="c${c.replace(/[^a-z0-9]/gi,'')}">${esc(c)}</button>`).join('');
   const blocks=cats.map(c=>{
-    const rows=groups[c].map(it=>`<div class="brow" data-name="${esc((it.name+' '+it.style+' '+it.loc).toLowerCase())}"><div class="binfo"><div class="bname">${esc(it.name)}</div><div class="bmeta">${esc(it.style)} · ${esc(it.abv)} · ${esc(it.loc)}</div></div><div class="bright"><span class="bsize">${esc(it.size)}</span><span class="bprice">€${esc(it.price)}</span></div></div>`).join('');
+    const rows=groups[c].map(it=>{
+      const r=rmap&&rmap[norm(it.name)];
+      const rate=(r&&r[0])?`<div class="brate2">${bubbles(r[0],11,3)}<span class="brs2">${r[0].toFixed(2)}</span>${r[1]?`<span class="brc2">${kfmt(r[1])} ratings</span>`:''}</div>`:'';
+      const meta=[it.style,it.abv,it.loc].filter(Boolean).map(esc).join(' · ');
+      return `<div class="brow" data-name="${esc((it.name+' '+it.style+' '+it.loc).toLowerCase())}"><div class="binfo"><div class="bname">${esc(it.name)}</div><div class="bmeta">${meta}</div>${rate}</div><div class="bright"><span class="bsize">${esc(it.size)}</span><span class="bprice">€${esc(it.price)}</span></div></div>`;
+    }).join('');
     return `<section class="catblock" data-cat="c${c.replace(/[^a-z0-9]/gi,'')}"><h2 class="cathead">${esc(c)} <span class="catcount">${groups[c].length}</span></h2>${rows}</section>`;
   }).join('');
   return `<div class="toolbar"><input class="search" id="bsearch" placeholder="Search bottles — name, style, brewery…" autocomplete="off"><div class="chips" id="bchips">${chips}</div></div><div class="tapnote" style="margin-top:4px">All bottles available for takeaway at a reduced price.</div><div id="blist">${blocks}</div><div class="empty" id="bempty">No matches — try another search.</div>`;
@@ -211,6 +216,9 @@ nav.tabs button.active{color:var(--cream);border-bottom:3px solid var(--gold)}
 .brow:last-child{border-bottom:0}
 .bname{font-size:13.5px;font-weight:600;line-height:1.25;color:var(--cream)}
 .bmeta{font-size:11px;color:var(--mut);margin-top:2px}
+.brate2{display:inline-flex;align-items:center;gap:6px;margin-top:5px}
+.brate2 .brs2{font-family:'Oswald';font-weight:600;font-size:12.5px;color:var(--yellow)}
+.brate2 .brc2{font-size:10px;color:var(--mut);letter-spacing:.2px}
 .bright{text-align:right;flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:1px}
 .bsize{font-size:10.5px;color:var(--mut)}
 .bprice{font-family:'Oswald';font-weight:600;font-size:15px;color:var(--yellow)}
@@ -279,7 +287,7 @@ function _othSecs(o){ const S=[]; for(const [c,items] of Object.entries(o.spirit
   S.push({name:"Coffee",items:o.coffee.map(([n])=>({name:n}))}); return S; }
 
 function build(tap, bottle, other, rmap, emblem, stamp){
-  const T=tapPanel(tap,rmap), B=bottlePanel(bottle), O=otherPanel(other);
+  const T=tapPanel(tap,rmap), B=bottlePanel(bottle,rmap), O=otherPanel(other);
   const nTap=tap.length, nBot=Object.values(bottle).reduce((a,x)=>a+x.length,0);
   const S_tap=JSON.stringify(_biz(_menu('Tap Beers',_tapSecs(tap))));
   const S_bot=JSON.stringify(_biz(_menu('Bottled Beers',_botSecs(bottle))));
