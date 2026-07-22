@@ -132,8 +132,8 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .item .p{font-size:8pt;margin-top:2pt;color:'''+MUT+'''}
 .item .p b{color:'''+CRIM+'''}
 .cat{break-inside:avoid;margin-bottom:8pt}
-.cat h3{font-family:"Cormorant";font-weight:700;font-size:14pt;letter-spacing:.5pt;color:'''+CRIM+''';border-bottom:1pt solid '''+SOFTG+''';padding-bottom:2pt;margin-bottom:3pt}
-.cat h3 .cc{color:'''+GOLD+''';font-size:10.5pt;font-family:"Jost"}
+.cat h3{font-family:"Cormorant";font-weight:700;font-size:13pt;letter-spacing:.5pt;color:'''+CRIM+''';border-bottom:1pt solid '''+SOFTG+''';padding-bottom:2pt;margin-bottom:3pt}
+.cat h3 .cc{color:'''+GOLD+''';font-size:9.5pt;font-family:"Jost"}
 /* ---- Other Than Beer: warmer, richer treatment ---- */
 .omenu{font-size:9.4pt}
 .omenu .cat{margin-bottom:13pt}
@@ -153,15 +153,15 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .omenu .oclose .ocde{font-size:11pt;color:'''+MUT+''';font-weight:400;margin-top:3pt}
 .brow{display:flex;justify-content:space-between;gap:6pt;align-items:baseline;padding:2.3pt 0;border-bottom:.4pt dotted #e2cfa8}
 .bl{flex:1}
-.bn{font-size:10pt;font-weight:600;color:'''+INK+'''}
-.bm{display:block;font-size:8.9pt;color:'''+MUT+''';margin-top:.5pt}
+.bn{font-size:9pt;font-weight:600;color:'''+INK+'''}
+.bm{display:block;font-size:7.9pt;color:'''+MUT+''';margin-top:.5pt}
 .brate{white-space:nowrap;margin-left:5pt}
-.brate .brs{font-family:"Jost";font-weight:600;font-size:9pt;color:#a9781a;vertical-align:middle}
+.brate .brs{font-family:"Jost";font-weight:600;font-size:8pt;color:#a9781a;vertical-align:middle}
 .br{text-align:right;white-space:nowrap}
-.bs{font-size:8.7pt;color:#b09b78;margin-right:4pt}
-.bp{font-family:"Cormorant";font-weight:700;font-size:12.5pt;color:'''+CRIM+'''}
-.bsub{display:block;font-size:9pt;color:'''+MUT+''';margin-top:.5pt}
-.bp2{font-size:9.4pt;color:'''+CRIM+''';font-weight:600}
+.bs{font-size:7.7pt;color:#b09b78;margin-right:4pt}
+.bp{font-family:"Cormorant";font-weight:700;font-size:11.5pt;color:'''+CRIM+'''}
+.bsub{display:block;font-size:8pt;color:'''+MUT+''';margin-top:.5pt}
+.bp2{font-size:8.4pt;color:'''+CRIM+''';font-weight:600}
 .content{padding-bottom:60mm}
 .content.bcontent{padding-bottom:0}
 .bottomflow{margin-top:7mm;break-inside:avoid;min-height:262mm;display:flex;flex-direction:column;justify-content:flex-end}
