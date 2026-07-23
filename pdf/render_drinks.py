@@ -239,7 +239,8 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .tdisplay .qr4 .qrcell img{width:86pt;height:86pt}
 .tdisplay .qcap{font-size:8.8pt}
 .tdisplay .qsub{font-size:7.2pt}
-.dstmt-big{font-size:11pt;line-height:1.4;padding:9pt 13pt;margin:8pt 0 2pt}
+.tdisplay .hc .st{font-size:20pt}
+.dstmt-big{font-size:13pt;line-height:1.4;padding:9pt 13pt;margin:8pt 0 2pt}
 .qrsm{margin-top:4pt}
 .qrsm .qrhead{font-size:11pt;margin-bottom:5pt;padding-bottom:2.5pt}
 .qrsm .qrcell img{width:54pt;height:54pt}
