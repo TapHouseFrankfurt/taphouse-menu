@@ -206,6 +206,27 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .hc h1{font-family:"Cormorant";font-weight:700;font-size:31pt;color:#6D1A28;line-height:1;margin:0 0 1pt}
 .hc .st{font-family:"Cormorant";font-weight:600;font-size:15pt;color:#4A1019;font-style:italic}
 .hc .tl{font-family:"Jost";font-size:8pt;color:#8a7256;letter-spacing:.5pt;margin-top:4pt}
+/* ---- one-page display sheets ---- */
+.dstmt{margin:10pt 0 2pt;padding:9pt 12pt;background:rgba(201,150,58,.12);border-left:3.5pt solid '''+GOLD+''';border-radius:5pt;font-size:9.4pt;line-height:1.45;color:'''+DEEP+'''}
+.dstmt b{color:'''+CRIM+'''}
+.ocompact{font-size:7.7pt}
+.ocompact .note{font-size:7.6pt;margin-bottom:5pt}
+.ocompact .cat{margin-bottom:5pt}
+.ocompact .cat h3{font-size:11pt;padding-bottom:1.5pt;margin-bottom:2.5pt}
+.ocompact .cat h3 .cc{font-size:8.5pt}
+.ocompact .brow{padding:1.6pt 0}
+.ocompact .bn{font-size:8pt}
+.ocompact .bm{display:inline;font-size:7pt;margin-left:6pt;margin-top:0}
+.ocompact .bp2{font-size:8pt}
+.qr4 .qrcell img{width:70pt;height:70pt}
+.qr4{justify-content:space-around}
+.qr4.qrtight{margin-top:3pt}
+.dispfoot{margin-top:8pt}
+.qrsm{margin-top:4pt}
+.qrsm .qrhead{font-size:11pt;margin-bottom:5pt;padding-bottom:2.5pt}
+.qrsm .qrcell img{width:54pt;height:54pt}
+.qrsm .qcap{font-size:7.4pt;margin-top:2.5pt}
+.qrsm .qsub{font-size:6.2pt}
 '''
 
 CAMBA=fpath('camba.png')
@@ -280,7 +301,77 @@ def build(kind, outname):
     HTML(string=doc, base_url=HERE).write_pdf(out)
     print(outname, os.path.getsize(out), "bytes")
 
+# ===== One-page display sheets (table/wall) — 4 standard menu QRs, no reviews/WiFi =====
+QR4_BLOCK = ('<div class="qrzone"><div class="qrhead">Full &amp; up-to-date menus — ask us or scan &nbsp;·&nbsp; Vollständige Karten</div>'
+    '<div class="qrrow qr4">'
+    + qr_cell('tap.png','Tap Beers','All 20 taps · live')
+    + qr_cell('bottle.png','Bottled Beers','150+ by the bottle')
+    + qr_cell('other.png','Other Drinks','Wine · Spirits · more')
+    + qr_cell('food.png','Food Menu','Speisekarte')
+    + '</div></div>')
+
+# Compact variant for the tight Other-drinks sheet (smaller QRs so everything fits one page)
+QR4_COMPACT = ('<div class="qrzone qrsm"><div class="qrhead">Full &amp; up-to-date menus — ask us or scan &nbsp;·&nbsp; Vollständige Karten</div>'
+    '<div class="qrrow qr4">'
+    + qr_cell('tap.png','Tap Beers','All 20 taps · live')
+    + qr_cell('bottle.png','Bottled Beers','150+ by the bottle')
+    + qr_cell('other.png','Other Drinks','Wine · Spirits · more')
+    + qr_cell('food.png','Food Menu','Speisekarte')
+    + '</div></div>')
+
+def tap_display_body():
+    core = tap_items(lambda n: n <= 7, 132)
+    note = '<div class="note">Our seven core taps — always on. Ratings are live from Untappd.</div>'
+    stmt = ('<div class="dstmt"><b>Taps 8–20 rotate constantly</b> — an ever-changing craft selection — and we pour '
+            '<b>150+ more beers by the bottle</b>. For the full, always-current list, <b>ask our team for a detailed '
+            'menu</b> or scan a code below. &nbsp;/&nbsp; Zapfhähne 8–20 wechseln laufend, dazu 150+ Flaschenbiere — '
+            'die komplette, aktuelle Karte gern beim Team erfragen oder scannen.</div>')
+    sheet = ('<div class="sheet">'+header('Beers on Tap','“Spice amplifies hops. Hops cut spice.”')
+             +'<div class="fill">'+note+'<div class="cols2">'+core+'</div>'+stmt+QR4_BLOCK+'</div>'
+             +'<div class="footwrap">'+FOOT_ROW+'</div></div>')
+    return '<div class="bg"></div><div class="bgband"></div>'+sheet
+
+def other_compact_html():
+    def sp(items):
+        r=[]
+        for name,abv,p4,p2 in items:
+            m='<span class="bm">%s</span>'%esc(abv) if abv else ''
+            r.append('<div class="brow"><div class="bl"><span class="bn">%s</span>%s</div><div class="br"><span class="bp2">4cl €%s · 2cl €%s</span></div></div>'%(esc(name),m,esc(p4),esc(p2)))
+        return "".join(r)
+    spirit="".join('<div class="cat"><h3>%s</h3>%s</div>'%(esc(c),sp(i)) for c,i in D.SPIRITS.items())
+    afrows="".join('<div class="brow"><div class="bl"><span class="bn">%s</span><span class="bm">%s · non-alcoholic</span></div><div class="br"><span class="bp2">€%s</span></div></div>'%(esc(n),esc(a),esc(p)) for n,a,p in D.AF_COCKTAILS)
+    afblock='<div class="cat"><h3>Alcohol-Free Cocktails — ISH</h3>%s</div>'%afrows
+    def wn(items):
+        r=[]
+        for name,abv,g1,g2,bo in items:
+            pp=" · ".join(x for x in [('0.1l €'+g1) if g1 else '',('0.2l €'+g2) if g2 else '',('Fl. €'+bo) if bo else ''] if x)
+            m='<span class="bm">%s</span>'%esc(abv) if abv else ''
+            r.append('<div class="brow"><div class="bl"><span class="bn">%s</span>%s</div><div class="br"><span class="bp2">%s</span></div></div>'%(esc(name),m,esc(pp)))
+        return "".join(r)
+    wine='<div class="cat"><h3>Wine</h3>%s%s</div><div class="cat"><h3>Alcohol-Free Wine</h3>%s</div>'%(wn(D.WINE),wn(D.WINE_SPECIAL),wn(D.WINE_NA))
+    def sm(items): return "".join('<div class="brow"><div class="bl"><span class="bn">%s</span></div><div class="br"><span class="bp2">%s</span></div></div>'%(esc(n),esc(p)) for n,p in items)
+    soft='<div class="cat"><h3>Softdrinks</h3>%s</div>'%sm(D.SOFT)
+    coffee='<div class="cat"><h3>Coffee</h3>%s</div>'%sm(D.COFFEE)
+    note='<div class="note">%s &nbsp;·&nbsp; Spirit prices: 4cl (single) / 2cl.</div>'%esc(D.MIXERS)
+    return '<div class="ocompact">'+note+'<div class="cols2">'+spirit+afblock+wine+soft+coffee+'</div></div>'
+
+def build_display(kind, outname):
+    if kind=='tap':
+        body=tap_display_body()
+    else:
+        # Plain flow (no fixed-height flex) so the QR block sits right after the drinks on one page.
+        body=('<div class="bg"></div><div class="bgband"></div>'
+              +header('Other Than Beer','Wine · Spirits · Alcohol-Free · Softdrinks · Coffee')
+              +other_compact_html()+QR4_COMPACT
+              +'<div class="dispfoot">'+FOOT_ROW+'</div>')
+    doc="<!DOCTYPE html><html><head><meta charset='utf-8'><style>"+css()+"</style></head><body>"+body+"</body></html>"
+    out=os.path.join(PUB, outname)
+    HTML(string=doc, base_url=HERE).write_pdf(out)
+    print(outname, os.path.getsize(out), "bytes")
+
 if __name__ == '__main__':
     build('tap','tap-beers.pdf')
     build('bottle','bottle-beers.pdf')
     build('other','other-drinks.pdf')
+    build_display('tap','tap-beers-display.pdf')
+    build_display('other','other-drinks-display.pdf')
