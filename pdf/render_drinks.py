@@ -209,19 +209,37 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 /* ---- one-page display sheets ---- */
 .dstmt{margin:10pt 0 2pt;padding:9pt 12pt;background:rgba(201,150,58,.12);border-left:3.5pt solid '''+GOLD+''';border-radius:5pt;font-size:9.4pt;line-height:1.45;color:'''+DEEP+'''}
 .dstmt b{color:'''+CRIM+'''}
-.ocompact{font-size:7.7pt}
-.ocompact .note{font-size:7.6pt;margin-bottom:5pt}
-.ocompact .cat{margin-bottom:5pt}
-.ocompact .cat h3{font-size:11pt;padding-bottom:1.5pt;margin-bottom:2.5pt}
-.ocompact .cat h3 .cc{font-size:8.5pt}
-.ocompact .brow{padding:1.6pt 0}
-.ocompact .bn{font-size:8pt}
-.ocompact .bm{display:inline;font-size:7pt;margin-left:6pt;margin-top:0}
-.ocompact .bp2{font-size:8pt}
+.ocompact{font-size:8pt}
+.ocompact .note{font-size:7.9pt;margin-bottom:5pt}
+.ocompact .cat{margin-bottom:3.5pt}
+.ocompact .cat h3{font-size:12pt;padding-bottom:1.6pt;margin-bottom:2.5pt}
+.ocompact .cat h3 .cc{font-size:8.8pt}
+.ocompact .brow{padding:1.5pt 0}
+.ocompact .bn{font-size:8.9pt}
+.ocompact .bm{display:inline;font-size:7.3pt;margin-left:6pt;margin-top:0}
+.ocompact .bp2{font-size:8.7pt}
 .qr4 .qrcell img{width:70pt;height:70pt}
 .qr4{justify-content:space-around}
 .qr4.qrtight{margin-top:3pt}
-.dispfoot{margin-top:8pt}
+.dispfoot{margin-top:4pt}
+/* Tap display: push QRs to the bottom + larger, more legible type */
+.dfill{flex:1 0 auto;display:flex;flex-direction:column}
+.qrbottom{margin-top:auto;padding-top:4pt}
+.qrfoot{margin-top:6pt}
+.tdisplay .note{font-size:9pt;margin-bottom:4pt}
+.tdisplay .item{margin-bottom:3pt;padding-bottom:2.2pt}
+.tdisplay .item .n{font-size:13.4pt}
+.tdisplay .item .m{font-size:8.2pt}
+.tdisplay .item .d{font-size:7.8pt;max-height:17pt}
+.tdisplay .item .p{font-size:9pt}
+.tdisplay .rate{margin:1pt 0 .5pt}
+.tdisplay .rate .rs{font-size:9.2pt}
+.tdisplay .rate .rc{font-size:7.2pt}
+.tdisplay .qrhead{font-size:13.5pt;margin-bottom:5pt}
+.tdisplay .qr4 .qrcell img{width:86pt;height:86pt}
+.tdisplay .qcap{font-size:8.8pt}
+.tdisplay .qsub{font-size:7.2pt}
+.dstmt-big{font-size:11pt;line-height:1.4;padding:9pt 13pt;margin:8pt 0 2pt}
 .qrsm{margin-top:4pt}
 .qrsm .qrhead{font-size:11pt;margin-bottom:5pt;padding-bottom:2.5pt}
 .qrsm .qrcell img{width:54pt;height:54pt}
@@ -320,15 +338,16 @@ QR4_COMPACT = ('<div class="qrzone qrsm"><div class="qrhead">Full &amp; up-to-da
     + '</div></div>')
 
 def tap_display_body():
-    core = tap_items(lambda n: n <= 7, 132)
+    core = tap_items(lambda n: n <= 7, 132)   # 2 description lines — leaves room for the bottom QR row
     note = '<div class="note">Our seven core taps — always on. Ratings are live from Untappd.</div>'
-    stmt = ('<div class="dstmt"><b>Taps 8–20 rotate constantly</b> — an ever-changing craft selection — and we pour '
+    stmt = ('<div class="dstmt dstmt-big"><b>Taps 8–20 rotate constantly</b> — an ever-changing craft selection — and we pour '
             '<b>150+ more beers by the bottle</b>. For the full, always-current list, <b>ask our team for a detailed '
             'menu</b> or scan a code below. &nbsp;/&nbsp; Zapfhähne 8–20 wechseln laufend, dazu 150+ Flaschenbiere — '
             'die komplette, aktuelle Karte gern beim Team erfragen oder scannen.</div>')
-    sheet = ('<div class="sheet">'+header('Beers on Tap','“Spice amplifies hops. Hops cut spice.”')
-             +'<div class="fill">'+note+'<div class="cols2">'+core+'</div>'+stmt+QR4_BLOCK+'</div>'
-             +'<div class="footwrap">'+FOOT_ROW+'</div></div>')
+    sheet = ('<div class="sheet tdisplay">'+header('Beers on Tap','“Spice amplifies hops. Hops cut spice.”')
+             +'<div class="dfill">'+note+'<div class="cols2">'+core+'</div>'+stmt
+             +'<div class="qrbottom">'+QR4_BLOCK+'<div class="qrfoot">'+FOOT_ROW+'</div></div>'
+             +'</div></div>')
     return '<div class="bg"></div><div class="bgband"></div>'+sheet
 
 def other_compact_html():
@@ -359,10 +378,11 @@ def build_display(kind, outname):
     if kind=='tap':
         body=tap_display_body()
     else:
-        # Plain flow (no fixed-height flex) so the QR block sits right after the drinks on one page.
+        # No QR codes on the Other-drinks sheet — use the whole page for a large, legible list.
+        # Plain flow (no fixed-height flex) so the multi-column list + footer share one page.
         body=('<div class="bg"></div><div class="bgband"></div>'
               +header('Other Than Beer','Wine · Spirits · Alcohol-Free · Softdrinks · Coffee')
-              +other_compact_html()+QR4_COMPACT
+              +other_compact_html()
               +'<div class="dispfoot">'+FOOT_ROW+'</div>')
     doc="<!DOCTYPE html><html><head><meta charset='utf-8'><style>"+css()+"</style></head><body>"+body+"</body></html>"
     out=os.path.join(PUB, outname)
