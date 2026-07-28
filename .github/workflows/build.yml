@@ -2,7 +2,8 @@ name: Build & publish TapHouse menu
 
 on:
   schedule:
-    - cron: '0 5 * * *'      # every day ~06:00–07:00 Frankfurt time
+    - cron: '0 */2 * * *'    # every 2 hours (UTC). NB: GitHub delays scheduled runs by hours;
+                             # use the "Run workflow" button (workflow_dispatch) for an instant refresh.
   workflow_dispatch:          # lets you run it manually anytime
   push:
     branches: [ main ]
