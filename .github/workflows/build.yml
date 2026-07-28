@@ -58,3 +58,53 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+
+  # ---- Drift guard ----------------------------------------------------------
+  # Runs AFTER deploy (so it never blocks the live site). Fetches the LIVE PDF
+  # and the LIVE menu data and checks they agree. If the PDF ever ends up out of
+  # sync with the online menu (e.g. a render step failed and a stale PDF is being
+  # served), this job fails -> GitHub emails the repo owner. The fix is one click:
+  # Actions -> "Run workflow".
+  verify:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Live PDF vs live menu data
+        run: |
+          python -m pip install --quiet pdfplumber requests
+          python - <<'PY'
+          import requests, pdfplumber, io, time, sys
+          base = "https://menu.taphousefrankfurt.com"
+          def norm(s): return s.replace(",", ".")
+          def get(path):
+              return requests.get(f"{base}{path}?v={int(time.time())}", timeout=90)
+          data = get("/_drinks.json").json()
+          # Every non-flight price of the 7 core taps must appear in the tap PDF.
+          want = []
+          for t in data["tap"][:7]:
+              for size, price in t["prices"]:
+                  if "flight" not in size.lower():
+                      want.append(norm(price))
+          def pdf_text(path):
+              b = get(path).content
+              txt = ""
+              with pdfplumber.open(io.BytesIO(b)) as pdf:
+                  for p in pdf.pages: txt += (p.extract_text() or "")
+              return norm(txt)
+          missing = want
+          for attempt in range(3):          # retry to allow CDN propagation
+              txt = pdf_text("/tap-beers.pdf")
+              missing = [p for p in want if p not in txt]
+              if not missing:
+                  print(f"Tap PDF in sync with live data (checked {len(want)} prices).")
+                  sys.exit(0)
+              print(f"attempt {attempt+1}: still missing {sorted(set(missing))} — waiting 30s for CDN…")
+              time.sleep(30)
+          print(f"::error::Live tap PDF is OUT OF SYNC with the online menu. "
+                f"Prices in the data but not in the PDF: {sorted(set(missing))}. "
+                f"The PDF did not rebuild with the current data — open Actions and click 'Run workflow' to refresh.")
+          sys.exit(1)
+          PY
