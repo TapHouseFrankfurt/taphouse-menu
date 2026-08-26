@@ -48,6 +48,25 @@ jobs:
       # qr-routes.json says. Runs BEFORE the PDFs are rendered, so a mismatched code
       # can never be baked into a printable menu. NOT continue-on-error: this is
       # exactly the check whose absence let dead QR codes ship on 22 Aug 2026.
+      # A file that exists at both / and /scripts drifts silently: someone edits one,
+      # someone else uploads the other over the top. That is precisely how the /qr/
+      # pages and the analytics beacon were deleted on 14 Aug 2026 -- a stale copy of
+      # build.mjs was uploaded and nobody noticed for eight days. Fail loudly instead.
+      - name: No duplicate filenames between / and /scripts
+        run: |
+          python - <<'PY'
+          import os, sys
+          root    = {f for f in os.listdir('.') if os.path.isfile(f)}
+          scripts = set(os.listdir('scripts')) if os.path.isdir('scripts') else set()
+          dupes   = sorted(root & scripts)
+          if dupes:
+              for d in dupes:
+                  print(f"::error::Duplicate file: ./{d} and ./scripts/{d} - two copies of the "
+                        f"same script will drift apart. Keep one and delete the other.")
+              sys.exit(1)
+          print("No duplicate filenames between / and /scripts.")
+          PY
+
       - name: Verify QR images match qr-routes.json
         run: |
           python -m pip install --quiet segno pillow opencv-python-headless
