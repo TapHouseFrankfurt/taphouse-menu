@@ -1,0 +1,10 @@
+{
+  "_comment": "SINGLE SOURCE OF TRUTH for every printed QR code. build.mjs emits one landing page per slug, scripts/gen_qr.py regenerates the PNGs embedded in the printed menus, and the CI verify job tests every entry after each deploy. Because all three read this file, a QR image can never point at a route that does not exist. To add or repoint a code, edit ONLY this file, then run: python3 scripts/gen_qr.py",
+  "base": "https://menu.taphousefrankfurt.com",
+  "routes": {
+    "tap":    { "dest": "/tap-beers/",    "caption": "Beers on Tap" },
+    "bottle": { "dest": "/bottle-beers/", "caption": "Bottled Beers" },
+    "other":  { "dest": "/other-drinks/", "caption": "Other Drinks" },
+    "food":   { "dest": "/food.html",     "caption": "Food Menu" }
+  }
+}

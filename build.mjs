@@ -6,6 +6,14 @@ const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dir;  // build.mjs runs from repo root
 const PUB = join(ROOT, 'public');
 
+// Cloudflare Web Analytics: cookieless, so no GDPR/TTDSG consent banner is needed
+// in front of the menu. Token comes from the CF_BEACON_TOKEN repo secret; if it is
+// unset the tag is simply omitted and the build still succeeds.
+const CF_BEACON = process.env.CF_BEACON_TOKEN
+  ? `<script defer src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token":"${process.env.CF_BEACON_TOKEN}"}'></script>`
+  : '';
+if(!process.env.CF_BEACON_TOKEN) console.log('CF_BEACON_TOKEN not set - analytics tag omitted');
+
 const URLS = {
   tap:    'https://untp.beer/JE8zq',
   bottle: 'https://untp.beer/AXmAK',
@@ -261,7 +269,7 @@ function menunav(active){
 function footer(emblem, stamp){ return `<footer><img class="femblem" src="${emblem}"/><div class="fbrand">TapHouse Frankfurt</div><div class="ftag">Craft Beer Bar with Indian Kitchen</div><div class="faddr">Mendelssohnstraße 51 · 60325 Frankfurt am Main · <a href="tel:+496960660989">+49 69 60660989</a> · <a href="https://www.taphousefrankfurt.com/" target="_blank" rel="noopener">taphousefrankfurt.com</a></div><div class="fsoc">Follow us: <a href="https://www.instagram.com/taphousefrankfurt/" target="_blank" rel="noopener">Instagram</a> · <a href="https://www.facebook.com/taphousefrankfurt" target="_blank" rel="noopener">Facebook</a> · <a href="https://untappd.com/v/taphouse-frankfurt/10241853" target="_blank" rel="noopener">Untappd</a> @taphousefrankfurt</div><div class="fpay">Card payments welcome · Girocard from €10 · Debit/Credit from €15 — no AMEX<br>#SpiceCraft · #EinfachCraftBier · Prices in € incl. VAT</div><div class="updated">Menu auto-updated ${stamp}</div></footer>`; }
 const TABS_JS=`document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');window.scrollTo(0,0);});const h=location.hash.replace('#','');if(['tap','bottle','other'].includes(h)){const t=document.querySelector('nav.tabs button[data-tab="'+h+'"]');if(t)t.click();}`;
 const FILTER_JS=`(function(){const chips=document.getElementById('bchips'),search=document.getElementById('bsearch');if(!chips)return;let cur='all';function apply(){const q=search.value.trim().toLowerCase();let any=false;document.querySelectorAll('#blist .catblock').forEach(bl=>{const ok=cur==='all'||bl.dataset.cat===cur;let sh=0;bl.querySelectorAll('.brow').forEach(r=>{const m=ok&&(!q||r.dataset.name.includes(q));r.style.display=m?'flex':'none';if(m)sh++;});bl.style.display=(ok&&sh>0)?'block':'none';if(sh>0)any=true;});document.getElementById('bempty').style.display=any?'none':'block';}chips.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');cur=c.dataset.cat;apply();});search.addEventListener('input',apply);})();`;
-function page(title, desc, jsonld, body, js){ return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="keywords" content="craft beer bar Frankfurt, TapHouse Frankfurt, Indian kitchen, tap list, bottled beer, Untappd, #SpiceCraft, Frankfurt am Main, Westend"><meta property="og:type" content="website"><meta property="og:site_name" content="TapHouse Frankfurt"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:locale" content="en"><meta name="twitter:card" content="summary">${FONTS}<style>${STYLE}</style><script type="application/ld+json">${jsonld}</script></head><body>${body}<script>${js}</script></body></html>`; }
+function page(title, desc, jsonld, body, js){ return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="keywords" content="craft beer bar Frankfurt, TapHouse Frankfurt, Indian kitchen, tap list, bottled beer, Untappd, #SpiceCraft, Frankfurt am Main, Westend"><meta property="og:type" content="website"><meta property="og:site_name" content="TapHouse Frankfurt"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:locale" content="en"><meta name="twitter:card" content="summary">${FONTS}<style>${STYLE}</style><script type="application/ld+json">${jsonld}</script>${CF_BEACON}</head><body>${body}<script>${js}</script></body></html>`; }
 
 
 function _biz(menuObj){ return ({
@@ -550,6 +558,46 @@ async function main(){
   }catch(e){ console.log('_drinks.json skipped', e.message); }
   const files=build(tap,bottle,other,rmap,emblem,stamp);
   for(const [name,html] of Object.entries(files)){ const fp=join(PUB,name); mkdirSync(dirname(fp),{recursive:true}); writeFileSync(fp,html); }
+
+  // ---- QR landing pages (/qr/<slug>) ---------------------------------------
+  // Printed menus, table cards and stickers carry QR codes pointing at /qr/<slug>.
+  // These MUST exist in the deployed artifact: public/ is regenerated every run and
+  // is not committed, so a file added by hand in the repo would never reach the site.
+  // Without them a scan hits the GitHub Pages 404 -- which is exactly what happened
+  // between 22 and 26 Aug 2026.
+  //
+  // Routes come from qr-routes.json, the same file that generates the QR images
+  // (scripts/gen_qr.py) and drives the post-deploy CI check. One source of truth, so
+  // the picture and the route it encodes cannot drift apart.
+  //
+  // Attribution: we redirect to <dest>?src=qr-<slug> rather than firing an analytics
+  // event before navigating. Firing-then-redirecting races the unload and loses counts;
+  // tagging the destination is race-free and also captures what the guest does next.
+  try{
+    const QR=JSON.parse(readFileSync(join(ROOT,'qr-routes.json'),'utf8'));
+    for(const [slug,{dest}] of Object.entries(QR.routes)){
+      const target=dest+(dest.includes('?')?'&':'?')+'src=qr-'+slug;
+      const html='<!doctype html><html lang="en"><head><meta charset="utf-8">'
+        +'<meta name="viewport" content="width=device-width,initial-scale=1">'
+        +'<meta http-equiv="refresh" content="0; url='+target+'">'
+        +'<link rel="canonical" href="'+QR.base+dest+'">'
+        +'<meta name="robots" content="noindex,follow">'
+        +'<title>TapHouse Frankfurt — Menu</title>'
+        +'<script>location.replace('+JSON.stringify(target)+'+location.hash);<\/script>'
+        +'<style>html,body{margin:0;height:100%}body{background:#17100F;color:#F2E6D2;'
+        +'font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;'
+        +'display:flex;align-items:center;justify-content:center;text-align:center;padding:24px}'
+        +'a{color:#E3AD46}</style></head><body><p>Opening the menu…<br>'
+        +'<a href="'+target+'">Tap here if it does not open automatically.</a></p></body></html>';
+      const fp=join(PUB,'qr',slug,'index.html');
+      mkdirSync(dirname(fp),{recursive:true});
+      writeFileSync(fp,html);
+    }
+    // Custom domain re-asserted in every artifact: public/ is rebuilt from scratch each
+    // run, so without this the domain relies solely on the Pages setting.
+    writeFileSync(join(PUB,'CNAME'),'menu.taphousefrankfurt.com\n');
+    console.log('Wrote qr/{'+Object.keys(QR.routes).join(',')+'}/index.html + CNAME');
+  }catch(e){ console.log('QR pages FAILED:', e.message); process.exitCode=1; }
   // sitemap + robots so search engines / AI crawlers discover every menu page
   try{
     const _d=new Date().toISOString().slice(0,10);
