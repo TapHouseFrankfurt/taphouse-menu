@@ -84,6 +84,11 @@ jobs:
     needs: deploy
     runs-on: ubuntu-latest
     steps:
+      # REQUIRED: the QR check reads qr-routes.json from the repo. Without this the
+      # job has no files at all and dies with FileNotFoundError before testing
+      # anything. (The older price check never needed it -- it fetches everything
+      # over HTTP -- which is why this job had no checkout to begin with.)
+      - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -98,42 +103,53 @@ jobs:
         run: |
           python -m pip install --quiet requests
           python - <<'PY'
-          import json, sys, time, urllib.parse, requests
+          import json, sys, time, requests
 
           table = json.load(open('qr-routes.json'))
           base  = table['base'].rstrip('/')
-          bad   = []
+          UA    = {'User-Agent': 'Mozilla/5.0 (iPhone) QRCheck'}
 
-          for slug, meta in table['routes'].items():
-              url  = f"{base}/qr/{slug}"
-              dest = meta['dest']
+          def probe(slug, dest):
+              """Return None if the code resolves, else a human-readable reason."""
+              url = f"{base}/qr/{slug}"
               try:
-                  r = requests.get(f"{url}?v={int(time.time())}", timeout=60,
-                                   headers={'User-Agent': 'Mozilla/5.0 (iPhone) QRCheck'})
+                  r = requests.get(f"{url}?v={int(time.time())}", timeout=60, headers=UA)
               except Exception as e:
-                  bad.append(f"{slug}: request failed -> {e}"); continue
-
+                  return f"{slug}: request failed -> {e}"
               if r.status_code != 200:
-                  bad.append(f"{slug}: {url} returned HTTP {r.status_code} (guests see a 404 page)")
-                  continue
-              # The landing page redirects client-side, so assert the destination is
-              # actually named in the HTML we got back.
+                  return f"{slug}: {url} returned HTTP {r.status_code} (guests see a 404 page)"
               if dest not in r.text:
-                  bad.append(f"{slug}: page loads but never points at {dest}")
-                  continue
-              # And confirm the destination itself is alive.
-              d = requests.get(f"{base}{dest}", timeout=60)
+                  return f"{slug}: page loads but never points at {dest}"
+              d = requests.get(f"{base}{dest}?v={int(time.time())}", timeout=60, headers=UA)
               if d.status_code != 200:
-                  bad.append(f"{slug}: destination {dest} returned HTTP {d.status_code}")
-                  continue
-              print(f"  OK  /qr/{slug}  ->  {dest}")
+                  return f"{slug}: destination {dest} returned HTTP {d.status_code}"
+              return None
 
-          if bad:
-              for b in bad:
-                  print(f"::error::DEAD QR CODE -- {b}")
-              print("::error::Printed menus in guests' hands point at these. Fix before anything else.")
-              sys.exit(1)
-          print(f"All {len(table['routes'])} printed QR codes resolve.")
+          routes = table['routes']
+          # Retry, like the price check below. This job runs seconds after deploy and a
+          # freshly added path can 404 at an edge node that has not caught up yet --
+          # transient, and NOT the same thing as a genuinely dead QR code. Only a code
+          # that is still dead after ~90s is worth waking anyone up for.
+          bad = []
+          for attempt in range(4):
+              bad = [msg for slug, meta in routes.items()
+                     if (msg := probe(slug, meta['dest'])) is not None]
+              if not bad:
+                  for slug, meta in routes.items():
+                      print(f"  OK  /qr/{slug}  ->  {meta['dest']}")
+                  print(f"All {len(routes)} printed QR codes resolve.")
+                  sys.exit(0)
+              if attempt < 3:
+                  print(f"attempt {attempt+1}: {len(bad)} not resolving yet - waiting 30s for CDN...")
+                  for m in bad:
+                      print(f"    {m}")
+                  time.sleep(30)
+
+          for m in bad:
+              print(f"::error::DEAD QR CODE -- {m}")
+          print("::error::Still failing after 4 attempts over ~90s, so this is not CDN lag. "
+                "Printed menus in guests' hands point at these. Fix before anything else.")
+          sys.exit(1)
           PY
 
       - name: Live PDF vs live menu data
