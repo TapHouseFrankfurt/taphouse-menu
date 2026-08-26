@@ -2,8 +2,11 @@ name: Build & publish TapHouse menu
 
 on:
   schedule:
-    - cron: '0 */2 * * *'    # every 2 hours (UTC). NB: GitHub delays scheduled runs by hours;
-                             # use the "Run workflow" button (workflow_dispatch) for an instant refresh.
+    - cron: '0 5,11,17,23 * * *'  # every 6 hours (UTC). Each run redeploys the whole site and
+                                  # purges the Pages CDN, so fewer runs = fewer windows where an
+                                  # edge node can miss. NB: GitHub delays scheduled runs by hours;
+                                  # use the "Run workflow" button (workflow_dispatch) for an
+                                  # instant refresh after a tap change.
   workflow_dispatch:          # lets you run it manually anytime
   push:
     branches: [ main ]
@@ -15,7 +18,10 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  # Never kill a deploy that is already running. Cancelling actions/deploy-pages
+  # mid-flight can leave the Pages deployment in a partial state, which serves 404s
+  # until the next successful run.
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -30,6 +36,7 @@ jobs:
         run: node build.mjs
         env:
           UNTAPPD_API_TOKEN: ${{ secrets.UNTAPPD_API_TOKEN }}
+          CF_BEACON_TOKEN: ${{ secrets.CF_BEACON_TOKEN }}
       # ---- Drinks PDFs (light print, match the food menu) auto-refreshed from the feed ----
       # Non-fatal: if this fails, the HTML menus still deploy and the committed static
       # drinks PDFs (copied by build.mjs) remain as a fallback, so QR codes never break.
@@ -37,6 +44,14 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      # Fails the build if any pdf/qr/*.png encodes something other than what
+      # qr-routes.json says. Runs BEFORE the PDFs are rendered, so a mismatched code
+      # can never be baked into a printable menu. NOT continue-on-error: this is
+      # exactly the check whose absence let dead QR codes ship on 22 Aug 2026.
+      - name: Verify QR images match qr-routes.json
+        run: |
+          python -m pip install --quiet segno pillow opencv-python-headless
+          python scripts/gen_qr.py --check
       - name: Render drinks PDFs from live feed
         continue-on-error: true
         run: |
@@ -72,6 +87,55 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      # ---- Every printed QR code must resolve -------------------------------
+      # The failure this was written for: on 22 Aug 2026 the printed codes were
+      # repointed to /qr/<slug> while those pages were never built, so every scan hit
+      # the GitHub Pages 404 for four days. The price-drift check below passed the
+      # whole time, because it was checking the wrong thing. This job closes that gap:
+      # it walks qr-routes.json, follows each code exactly as a guest's phone would,
+      # and fails -> GitHub emails you -> you know within minutes, not days.
+      - name: Every printed QR code resolves
+        run: |
+          python -m pip install --quiet requests
+          python - <<'PY'
+          import json, sys, time, urllib.parse, requests
+
+          table = json.load(open('qr-routes.json'))
+          base  = table['base'].rstrip('/')
+          bad   = []
+
+          for slug, meta in table['routes'].items():
+              url  = f"{base}/qr/{slug}"
+              dest = meta['dest']
+              try:
+                  r = requests.get(f"{url}?v={int(time.time())}", timeout=60,
+                                   headers={'User-Agent': 'Mozilla/5.0 (iPhone) QRCheck'})
+              except Exception as e:
+                  bad.append(f"{slug}: request failed -> {e}"); continue
+
+              if r.status_code != 200:
+                  bad.append(f"{slug}: {url} returned HTTP {r.status_code} (guests see a 404 page)")
+                  continue
+              # The landing page redirects client-side, so assert the destination is
+              # actually named in the HTML we got back.
+              if dest not in r.text:
+                  bad.append(f"{slug}: page loads but never points at {dest}")
+                  continue
+              # And confirm the destination itself is alive.
+              d = requests.get(f"{base}{dest}", timeout=60)
+              if d.status_code != 200:
+                  bad.append(f"{slug}: destination {dest} returned HTTP {d.status_code}")
+                  continue
+              print(f"  OK  /qr/{slug}  ->  {dest}")
+
+          if bad:
+              for b in bad:
+                  print(f"::error::DEAD QR CODE -- {b}")
+              print("::error::Printed menus in guests' hands point at these. Fix before anything else.")
+              sys.exit(1)
+          print(f"All {len(table['routes'])} printed QR codes resolve.")
+          PY
+
       - name: Live PDF vs live menu data
         run: |
           python -m pip install --quiet pdfplumber requests
