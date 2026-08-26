@@ -166,7 +166,7 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .content.bcontent{padding-bottom:0}
 .bottomflow{margin-top:7mm;break-inside:avoid;min-height:262mm;display:flex;flex-direction:column;justify-content:flex-end}
 .bottomgroup{position:absolute;left:0;right:0;bottom:0}
-.sheet{display:flex;flex-direction:column;min-height:265mm}
+.sheet{display:flex;flex-direction:column;min-height:255mm}
 .sheet.brk{break-before:page}
 .fill{flex:1 0 auto}
 .footwrap{flex:0 0 auto;margin-top:5pt;break-inside:avoid}
@@ -226,12 +226,18 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .dfill{flex:1 0 auto;display:flex;flex-direction:column}
 .qrbottom{margin-top:auto;padding-top:4pt}
 .qrfoot{margin-top:6pt}
-.tdisplay .note{font-size:9pt;margin-bottom:4pt}
-.tdisplay .item{margin-bottom:3pt;padding-bottom:2.2pt}
+.tdisplay .head{margin-bottom:4pt;padding-bottom:4pt}
+.tdisplay .llogo{height:66pt}
+.tdisplay .emblem{height:46pt}
+.tdisplay .hc h1{font-size:27pt}
+.tdisplay .hc .st{font-size:14pt}
+.tdisplay .note{font-size:9pt;margin:0 0 2pt}
+.tdisplay .item{margin-bottom:2pt;padding-bottom:1.5pt}
 .tdisplay .item .n{font-size:13.4pt}
 .tdisplay .item .m{font-size:8.2pt}
 .tdisplay .item .d{font-size:7.8pt;max-height:17pt}
 .tdisplay .item .p{font-size:9pt}
+.tdisplay .dstmt{margin:5pt 0 2pt;padding:7pt 12pt}
 .tdisplay .rate{margin:1pt 0 .5pt}
 .tdisplay .rate .rs{font-size:9.2pt}
 .tdisplay .rate .rc{font-size:7.2pt}
@@ -339,7 +345,7 @@ QR4_COMPACT = ('<div class="qrzone qrsm"><div class="qrhead">Full &amp; up-to-da
     + '</div></div>')
 
 def tap_display_body():
-    core = tap_items(lambda n: n <= 7, 132)   # 2 description lines — leaves room for the bottom QR row
+    core = tap_items(lambda n: n <= 7, 132)   # 2 description lines
     note = '<div class="note">Our seven core taps — always on. Ratings are live from Untappd.</div>'
     stmt = ('<div class="dstmt dstmt-big"><b>Taps 8–20 rotate constantly</b> — an ever-changing craft selection — and we pour '
             '<b>150+ more beers by the bottle</b>. For the full, always-current list, <b>ask our team for a detailed '
