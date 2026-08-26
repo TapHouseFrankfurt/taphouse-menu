@@ -6,6 +6,20 @@ const __dir = dirname(fileURLToPath(import.meta.url));
 const ROOT = __dir;  // build.mjs runs from repo root
 const PUB = join(ROOT, 'public');
 
+// Legal footer links. menu.taphousefrankfurt.com is a separate commercial website from
+// the Wix one (different host), so the German Impressumspflicht (§ 5 DDG) applies to it
+// in its own right -- it needs its own visible Impressum link. A link is only rendered
+// if its URL is non-empty, so an unset value can never ship as a dead link.
+const LEGAL = {
+  impressum:   'https://www.taphousefrankfurt.com/impressum',  // verified live 26.08.2026
+  datenschutz: ''   // <-- no Datenschutz page found on the Wix site. Once one exists, put
+                    //     its URL here and the link appears automatically.
+};
+const legalLinks = Object.entries({Impressum: LEGAL.impressum, Datenschutz: LEGAL.datenschutz})
+  .filter(([, u]) => u)
+  .map(([label, u]) => `<a href="${u}" target="_blank" rel="noopener">${label}</a>`)
+  .join(' · ');
+
 // Cloudflare Web Analytics: cookieless, so no GDPR/TTDSG consent banner is needed
 // in front of the menu. Token comes from the CF_BEACON_TOKEN repo secret; if it is
 // unset the tag is simply omitted and the build still succeeds.
@@ -241,6 +255,9 @@ footer{text-align:center;padding:30px 16px 54px;color:var(--mut);font-size:11px;
 .fsoc{font-size:11px;color:var(--cream);margin-top:5px}.fsoc b{color:var(--gold)}
 footer a{color:var(--gold);text-decoration:none;border-bottom:1px solid rgba(227,173,70,.45)}
 footer a:hover{color:var(--yellow)}
+.flegal{font-size:11.5px;color:var(--mut);letter-spacing:.3px;margin-top:6px}
+.flegal a{color:var(--gold);text-decoration:none}
+.flegal a:hover{text-decoration:underline}
 .fpay{font-size:10px;color:var(--mut);margin-top:10px;line-height:1.6}
 .updated{font-size:9.5px;color:#6f5f4d;margin-top:8px}
 .intro{max-width:680px;margin:0 auto;padding:12px 16px 0;font-size:12px;color:#b9a68f;line-height:1.5}
@@ -275,7 +292,7 @@ function menunav(active){
   const items=L.map(([slug,label])=> active===slug ? `<span class="mnav-cur" aria-current="page">${label}</span>` : `<a href="/${slug}/">${label}</a>`).join('');
   return `<nav class="mnav" aria-label="Drinks menu"><span class="mnav-lbl">Menu:</span>${items}<a href="https://menu.taphousefrankfurt.com/food.html">Food Menu</a><a href="https://www.taphousefrankfurt.com/">Home</a></nav>`;
 }
-function footer(emblem, stamp){ return `<footer><img class="femblem" src="${emblem}"/><div class="fbrand">TapHouse Frankfurt</div><div class="ftag">Craft Beer Bar with Indian Kitchen</div><div class="faddr">Mendelssohnstraße 51 · 60325 Frankfurt am Main · <a href="tel:+496960660989">+49 69 60660989</a> · <a href="https://www.taphousefrankfurt.com/" target="_blank" rel="noopener">taphousefrankfurt.com</a></div><div class="fsoc">Follow us: <a href="https://www.instagram.com/taphousefrankfurt/" target="_blank" rel="noopener">Instagram</a> · <a href="https://www.facebook.com/taphousefrankfurt" target="_blank" rel="noopener">Facebook</a> · <a href="https://untappd.com/v/taphouse-frankfurt/10241853" target="_blank" rel="noopener">Untappd</a> @taphousefrankfurt</div><div class="fpay">Card payments welcome · Girocard from €10 · Debit/Credit from €15 — no AMEX<br>#SpiceCraft · #EinfachCraftBier · Prices in € incl. VAT</div><div class="updated">Menu auto-updated ${stamp}</div></footer>`; }
+function footer(emblem, stamp){ return `<footer><img class="femblem" src="${emblem}"/><div class="fbrand">TapHouse Frankfurt</div><div class="ftag">Craft Beer Bar with Indian Kitchen</div><div class="faddr">Mendelssohnstraße 51 · 60325 Frankfurt am Main · <a href="tel:+496960660989">+49 69 60660989</a> · <a href="https://www.taphousefrankfurt.com/" target="_blank" rel="noopener">taphousefrankfurt.com</a></div><div class="fsoc">Follow us: <a href="https://www.instagram.com/taphousefrankfurt/" target="_blank" rel="noopener">Instagram</a> · <a href="https://www.facebook.com/taphousefrankfurt" target="_blank" rel="noopener">Facebook</a> · <a href="https://untappd.com/v/taphouse-frankfurt/10241853" target="_blank" rel="noopener">Untappd</a> @taphousefrankfurt</div><div class="fpay">Card payments welcome · Girocard from €10 · Debit/Credit from €15 — no AMEX<br>#SpiceCraft · #EinfachCraftBier · Prices in € incl. VAT</div><div class="flegal">${legalLinks}</div><div class="updated">Menu auto-updated ${stamp}</div></footer>`; }
 const TABS_JS=`document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');window.scrollTo(0,0);});const h=location.hash.replace('#','');if(['tap','bottle','other'].includes(h)){const t=document.querySelector('nav.tabs button[data-tab="'+h+'"]');if(t)t.click();}`;
 const FILTER_JS=`(function(){const chips=document.getElementById('bchips'),search=document.getElementById('bsearch');if(!chips)return;let cur='all';function apply(){const q=search.value.trim().toLowerCase();let any=false;document.querySelectorAll('#blist .catblock').forEach(bl=>{const ok=cur==='all'||bl.dataset.cat===cur;let sh=0;bl.querySelectorAll('.brow').forEach(r=>{const m=ok&&(!q||r.dataset.name.includes(q));r.style.display=m?'flex':'none';if(m)sh++;});bl.style.display=(ok&&sh>0)?'block':'none';if(sh>0)any=true;});document.getElementById('bempty').style.display=any?'none':'block';}chips.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');cur=c.dataset.cat;apply();});search.addEventListener('input',apply);})();`;
 function page(title, desc, jsonld, body, js){ return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="keywords" content="craft beer bar Frankfurt, TapHouse Frankfurt, Indian kitchen, tap list, bottled beer, Untappd, #SpiceCraft, Frankfurt am Main, Westend"><meta property="og:type" content="website"><meta property="og:site_name" content="TapHouse Frankfurt"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:locale" content="en"><meta name="twitter:card" content="summary">${FONTS}<style>${STYLE}</style><script type="application/ld+json">${jsonld}</script>${CF_BEACON}</head><body>${body}<script>${js}</script></body></html>`; }
