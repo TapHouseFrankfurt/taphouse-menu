@@ -172,7 +172,7 @@ function bottlePanel(groups, rmap){
     }).join('');
     return `<section class="catblock" data-cat="c${c.replace(/[^a-z0-9]/gi,'')}"><h2 class="cathead">${esc(c)} <span class="catcount">${groups[c].length}</span></h2>${rows}</section>`;
   }).join('');
-  return `<div class="toolbar"><input class="search" id="bsearch" placeholder="Search bottles — name, style, brewery…" autocomplete="off"><div class="chips" id="bchips">${chips}</div></div><div class="tapnote" style="margin-top:4px">All bottles available for takeaway at a reduced price.</div><div id="blist">${blocks}</div><div class="empty" id="bempty">No matches — try another search.</div>`;
+  return `<div class="toolbar"><input class="search" id="bsearch" placeholder="Search bottles — name, style, brewery…" autocomplete="off"><div class="chips" id="bchips">${chips}</div></div><div class="tapnote" style="margin-top:4px"><b>&#127974; Bottle shop</b> — every bottle and can on this list is available to take away at a reduced price. No minimum, no crate required. Open whenever the bar is open.</div><div id="blist">${blocks}</div><div class="empty" id="bempty">No matches — try another search.</div>`;
 }
 function otherPanel(o){
   const sp=items=>items.map(([n,a,p4,p2])=>`<div class="brow"><div class="binfo"><div class="bname">${esc(n)}</div>${a?`<span class="bmeta">${esc(a)}</span>`:''}</div><div class="bright"><span class="bprice">4cl €${esc(p4)}</span><span class="bsub">2cl €${esc(p2)}</span></div></div>`).join('');
@@ -343,13 +343,13 @@ function build(tap, bottle, other, rmap, emblem, stamp){
   const TT={
     all:['Drinks Menu — TapHouse Frankfurt | Craft Beer Bar & Indian Kitchen, Frankfurt', `The full drinks menu at TapHouse Frankfurt: ${nTap} rotating craft beers on tap with live Untappd ratings, ${nBot}+ bottled beers, plus wine, spirits and alcohol-free options — a craft beer bar with a modern Indian kitchen in Frankfurt am Main.`, S_all],
     tap:[`Tap Beers — TapHouse Frankfurt | ${nTap} Craft Beers on Tap`, `Live tap list at TapHouse Frankfurt: ${nTap} rotating craft beers with Untappd ratings and tasting flights, paired with modern Indian cuisine. Mendelssohnstraße 51, Frankfurt am Main.`, S_tap],
-    bottle:[`Bottled Beers — TapHouse Frankfurt | ${nBot}+ Craft Beers by Bottle & Can`, `${nBot} bottled and canned craft beers at TapHouse Frankfurt — alcohol-free, gluten-free, IPA, NEIPA, stout, sour, Trappist and more. Craft beer bar with Indian kitchen, Frankfurt am Main.`, S_bot],
+    bottle:[`Bottled Beers — TapHouse Frankfurt | ${nBot}+ Craft Beers by Bottle & Can`, `${nBot} bottled and canned craft beers at TapHouse Frankfurt — IPA, NEIPA, stout, sour, Trappist, alcohol-free and gluten-free. Drink in or buy to take away. Craft beer bottle shop and bar in Frankfurt am Main.`, S_bot],
     other:['Wine, Spirits & Drinks — TapHouse Frankfurt', 'Beyond beer at TapHouse Frankfurt: wine, gin, rum, whisky, alcohol-free ISH cocktails, softdrinks and coffee. Craft beer bar and Indian kitchen in Frankfurt am Main.', S_oth],
   };
   const intro=(txt)=>`<p class="intro">${txt}</p>`;
   const IN={
     tap:intro('The rotating <strong>craft beer tap list</strong> at <strong>TapHouse Frankfurt</strong> — a craft beer bar with a modern Indian kitchen in Frankfurt am Main. Ratings are live from Untappd.'),
-    bottle:intro('The full <strong>bottled &amp; canned craft beer</strong> selection at <strong>TapHouse Frankfurt</strong>, Frankfurt am Main — searchable by style.'),
+    bottle:intro(`The full <strong>bottled &amp; canned craft beer</strong> selection at <strong>TapHouse Frankfurt</strong>, Frankfurt am Main — <strong>${nBot}+ beers</strong>, searchable by style. Drink in, or <strong>buy any bottle to take away</strong> at a reduced price.`),
     other:intro('Wine, spirits, alcohol-free cocktails, softdrinks and coffee at <strong>TapHouse Frankfurt</strong> — craft beer bar &amp; Indian kitchen, Frankfurt am Main.'),
     all:intro('The complete <strong>drinks menu</strong> at <strong>TapHouse Frankfurt</strong> — craft beer on tap, bottled beers, wine, spirits and alcohol-free options in Frankfurt am Main.'),
   };
