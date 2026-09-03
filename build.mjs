@@ -156,7 +156,7 @@ function tapPanel(items, rmap){
     const pills = it.prices.map(([s,p])=>`<span class="pill">${esc(s)} <b>€${esc(p)}</b></span>`).join('');
     const r = rmap[norm(it.name)];
     const rate = r ? `<div class="rate">${bubbles(r[0])}<span class="rscore">${r[0].toFixed(2)}</span>${r[1]?`<span class="rcount">${kfmt(r[1])} ratings</span>`:''}</div>` : '';
-    return `<div class="card"><div class="cardhead"><h3><span class="tnum">${it.num}</span>${esc(it.name)}</h3></div>${rate}<div class="meta">${esc(meta)}</div><div class="origin">◍ ${esc(withCountry(it.loc))}</div>${it.desc?`<div class="cdesc"${isDe(it.desc)?' lang="de"':''}>${esc(it.desc)}</div>`:''}<div class="prices">${pills}</div></div>`;
+    return `<div class="card"><div class="cardhead"><h3><span class="tnum">${it.num}</span>${esc(it.name)}</h3></div>${rate}<div class="meta">${esc(meta)}</div><div class="origin">◍ ${esc(withCountry(it.loc, it.country))}</div>${it.desc?`<div class="cdesc"${isDe(it.desc)?' lang="de"':''}>${esc(it.desc)}</div>`:''}<div class="prices">${pills}</div></div>`;
   }).join('');
   return `<div class="tapnote"><b>🍺 Tasting flight</b> — choose any five 100&nbsp;ml pours from our twenty taps. Ratings are live from Untappd.</div>${cards}`;
 }
@@ -167,8 +167,9 @@ function bottlePanel(groups, rmap){
     const rows=groups[c].map(it=>{
       const r=rmap&&rmap[norm(it.name)];
       const rate=(r&&r[0])?`<div class="brate2">${bubbles(r[0],11,3)}<span class="brs2">${r[0].toFixed(2)}</span>${r[1]?`<span class="brc2">${kfmt(r[1])} ratings</span>`:''}</div>`:'';
-      const meta=[it.style,it.abv,it.loc].filter(Boolean).map(esc).join(' · ');
-      return `<div class="brow" data-name="${esc((it.name+' '+it.style+' '+it.loc).toLowerCase())}"><div class="binfo"><div class="bname">${esc(it.name)}</div><div class="bmeta">${meta}</div>${rate}</div><div class="bright"><span class="bsize">${esc(it.size)}</span><span class="bprice">€${esc(it.price)}</span></div></div>`;
+      const origin=withCountry(it.loc, it.country);
+      const meta=[it.style,it.abv,origin].filter(Boolean).map(esc).join(' · ');
+      return `<div class="brow" data-name="${esc((it.name+' '+it.style+' '+origin).toLowerCase())}"><div class="binfo"><div class="bname">${esc(it.name)}</div><div class="bmeta">${meta}</div>${rate}</div><div class="bright"><span class="bsize">${esc(it.size)}</span><span class="bprice">€${esc(it.price)}</span></div></div>`;
     }).join('');
     return `<section class="catblock" data-cat="c${c.replace(/[^a-z0-9]/gi,'')}"><h2 class="cathead">${esc(c)} <span class="catcount">${groups[c].length}</span></h2>${rows}</section>`;
   }).join('');
@@ -315,6 +316,15 @@ const FILTER_JS=`(function(){const chips=document.getElementById('bchips'),searc
 // engine read this very tap list and reported that no Frankfurt bar serves Latvian
 // beer, while an Ārpus keg was pouring on tap 20. Appending the country fixes that
 // for every origin, not just the Baltic ones.
+//
+// ⭐ PRIMARY SOURCE: the UTFB API already returns `brewery_country` on every item,
+// right next to `brewery_location`. Verified 04.09.2026 against public/_api_raw.json:
+// 154 of 154 items carry it, none empty. Always use it. It is also the ONLY thing that
+// fixes a brewery whose Untappd profile has a country but no city (e.g. HANDSTAND →
+// "Germany" with brewery_location empty) — no table can rescue an empty string.
+//
+// The REGION_COUNTRY table below is now a FALLBACK ONLY, for the legacy PDF-parse path
+// (parseTap/parseBottle), which reads a rendered PDF and never sees the API field.
 // Unknown regions are returned untouched — we never guess a country.
 const REGION_COUNTRY = {
   // Germany (German + English forms)
@@ -365,7 +375,16 @@ const REGION_COUNTRY = {
 const US_STATES = new Set(['al','ak','az','ar','ca','co','ct','de','fl','ga','hi','id','il','in','ia','ks','ky','la','me','md','ma','mi','mn','ms','mo','mt','ne','nv','nh','nj','nm','ny','nc','nd','oh','ok','or','pa','ri','sc','sd','tn','tx','ut','vt','va','wa','wv','wi','wy','dc']);
 const CA_PROV  = new Set(['ab','bc','mb','nb','nl','ns','nt','nu','on','pe','qc','sk','yt']);
 
-function withCountry(loc){
+function withCountry(loc, country){
+  // 1) Untappd's own brewery_country wins whenever we have it.
+  const c = String(country||'').trim();
+  if(c){
+    if(!loc) return c;                                   // HANDSTAND: country but no city
+    const lc = String(loc).trim();
+    if(lc.toLowerCase().endsWith(c.toLowerCase())) return lc;   // already ends in it
+    return lc + ', ' + c;
+  }
+  // 2) Fallback: infer from the region, for the legacy PDF-parse path only.
   if(!loc) return '';
   const parts = String(loc).split(',').map(x=>x.trim()).filter(Boolean);
   if(!parts.length) return loc;
@@ -374,13 +393,13 @@ function withCountry(loc){
   // already ends in a country name we'd add — leave it
   if(Object.values(REGION_COUNTRY).some(c=>c.toLowerCase()===key)) return loc;
   // Baltic municipality suffixes are unambiguous and cover breweries we have never seen
-  let country = REGION_COUNTRY[key];
-  if(!country && /\bnovads$/.test(key))   country = 'Latvia';    // e.g. Ādažu novads
-  if(!country && /\bmaakond$/.test(key))  country = 'Estonia';   // e.g. Harju maakond
-  if(!country && /savivaldyb/.test(key))   country = 'Lithuania';
-  if(!country && US_STATES.has(key))       country = 'USA';
-  if(!country && CA_PROV.has(key))         country = 'Canada';
-  return country ? loc + ', ' + country : loc;
+  let inferred = REGION_COUNTRY[key];
+  if(!inferred && /\bnovads$/.test(key))   inferred = 'Latvia';    // e.g. Ādažu novads
+  if(!inferred && /\bmaakond$/.test(key))  inferred = 'Estonia';   // e.g. Harju maakond
+  if(!inferred && /savivaldyb/.test(key))  inferred = 'Lithuania';
+  if(!inferred && US_STATES.has(key))      inferred = 'USA';
+  if(!inferred && CA_PROV.has(key))        inferred = 'Canada';
+  return inferred ? loc + ', ' + inferred : loc;
 }
 
 function page(title, desc, jsonld, body, js, canon){ return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title>${canon?`<link rel="canonical" href="${canon}"><meta property="og:url" content="${canon}">`:''}<meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="keywords" content="craft beer bar Frankfurt, TapHouse Frankfurt, Indian kitchen, tap list, bottled beer, Untappd, #SpiceCraft, Frankfurt am Main, Westend"><meta property="og:type" content="website"><meta property="og:site_name" content="TapHouse Frankfurt"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:locale" content="en"><meta name="twitter:card" content="summary">${FONTS}<style>${STYLE}</style><script type="application/ld+json">${jsonld}</script>${CF_BEACON}</head><body>${body}<script>${js}</script></body></html>`; }
@@ -400,8 +419,8 @@ function _biz(menuObj){ return ({
   "hasMenu":menuObj }); }
 function _menu(name, sections){ return {"@type":"Menu","name":name,"inLanguage":"en","hasMenuSection":sections.filter(x=>x.items.length).map(sec=>({"@type":"MenuSection","name":sec.name,
   "hasMenuItem":sec.items.map(it=>{const o={"@type":"MenuItem","name":it.name}; if(it.desc)o.description=it.desc; if(it.price)o.offers={"@type":"Offer","price":String(it.price),"priceCurrency":"EUR"}; return o;})}))}; }
-function _tapSecs(tap){ return [{name:"Beers on Tap",items:tap.map(t=>({name:t.name,desc:[t.style,t.abv,t.ibu?t.ibu+" IBU":"",withCountry(t.loc)].filter(Boolean).join(" · "),price:(t.prices.slice(-1)[0]||[])[1]}))}]; }
-function _botSecs(bottle){ return Object.entries(bottle).map(([cat,items])=>({name:cat,items:items.map(it=>({name:it.name,desc:[it.style,it.abv,withCountry(it.loc)].filter(Boolean).join(" · "),price:it.price}))})); }
+function _tapSecs(tap){ return [{name:"Beers on Tap",items:tap.map(t=>({name:t.name,desc:[t.style,t.abv,t.ibu?t.ibu+" IBU":"",withCountry(t.loc,t.country)].filter(Boolean).join(" · "),price:(t.prices.slice(-1)[0]||[])[1]}))}]; }
+function _botSecs(bottle){ return Object.entries(bottle).map(([cat,items])=>({name:cat,items:items.map(it=>({name:it.name,desc:[it.style,it.abv,withCountry(it.loc,it.country)].filter(Boolean).join(" · "),price:it.price}))})); }
 function _othSecs(o){ const S=[]; for(const [c,items] of Object.entries(o.spirits)) S.push({name:c,items:items.map(([n,a,p4])=>({name:n,desc:a,price:p4}))});
   S.push({name:"Alcohol-Free Cocktails",items:o.af_cocktails.map(([n,a,p])=>({name:n,desc:a+" non-alcoholic",price:p}))});
   S.push({name:"Wine",items:o.wine.map(([n,a,,g2,bo])=>({name:n,desc:a,price:bo||g2}))});
@@ -543,7 +562,7 @@ function apiTapBottle(raw, seed){
     });
     const rating = it.rating ? [Number(it.rating), it.rating_count||0] : [0,0];
     if(rating[0]) rmap[norm(nm)] = rating;
-    return { num: idx+1, name: nm, loc: it.brewery_location||'', style: it.custom_style||it.style||'',
+    return { num: idx+1, name: nm, loc: it.brewery_location||'', country: it.brewery_country||'', style: it.custom_style||it.style||'',
              abv: _pct(it.custom_abv||it.abv), ibu: _ibu(it.custom_ibu||it.ibu), prices,
              desc: (it.custom_description||it.description||'').replace(/\s+/g,' ').trim() };
   });
@@ -560,7 +579,7 @@ function apiTapBottle(raw, seed){
     const size=((c0.container_size&&c0.container_size.name)||'').replace(/Bottle|Can|Draft/ig,'').replace(/\s+/g,'').trim();
     const rating = it.rating ? [Number(it.rating), it.rating_count||0] : [0,0];
     if(rating[0]) rmap[norm(nm)] = rating;
-    bucket[CATS[ci]].push({ _o:(key in orderOf)?orderOf[key]:9999, name:nm, loc:it.brewery_location||'',
+    bucket[CATS[ci]].push({ _o:(key in orderOf)?orderOf[key]:9999, name:nm, loc:it.brewery_location||'', country:it.brewery_country||'',
       style: it.custom_style||it.style||'', abv:_pct(it.custom_abv||it.abv), size, price: c0.price!=null?Number(c0.price).toFixed(2):'' });
   }
   const bottle={};
@@ -706,8 +725,11 @@ async function main(){
   // Emit the parsed live feed as JSON so the Python PDF renderer (pdf/render_drinks.py)
   // builds the drinks PDFs from the same data. Curated descriptions/spirits stay in pdf/data.py.
   try{
-    const dj={ tap: tap.map(t=>({num:t.num,name:t.name,loc:t.loc,style:t.style,abv:t.abv,ibu:t.ibu,prices:t.prices,desc:t.desc||'',rating:rmap[norm(t.name)]||[0,0]})),
-               bottle: Object.fromEntries(Object.entries(bottle).map(([c,it])=>[c, it.map(b=>({name:b.name,loc:b.loc,style:b.style,abv:b.abv,size:b.size,price:b.price,rating:rmap[norm(b.name)]||[0,0]}))])),
+    // NOTE: `loc` stays exactly as Untappd gives it — the printed drinks PDF is width-
+    // sensitive and appending a country here would reflow it. `country` is added as a
+    // SEPARATE field so render_drinks.py can opt in later without any layout surprise.
+    const dj={ tap: tap.map(t=>({num:t.num,name:t.name,loc:t.loc,country:t.country||'',style:t.style,abv:t.abv,ibu:t.ibu,prices:t.prices,desc:t.desc||'',rating:rmap[norm(t.name)]||[0,0]})),
+               bottle: Object.fromEntries(Object.entries(bottle).map(([c,it])=>[c, it.map(b=>({name:b.name,loc:b.loc,country:b.country||'',style:b.style,abv:b.abv,size:b.size,price:b.price,rating:rmap[norm(b.name)]||[0,0]}))])),
                other };  // non-beer drinks (live prices/ABV from Untappd; curated names/labels/sizes)
     writeFileSync(join(PUB,'_drinks.json'), JSON.stringify(dj));
     console.log('Wrote _drinks.json:', dj.tap.length, 'taps');
