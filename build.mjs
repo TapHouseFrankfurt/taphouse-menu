@@ -156,7 +156,7 @@ function tapPanel(items, rmap){
     const pills = it.prices.map(([s,p])=>`<span class="pill">${esc(s)} <b>€${esc(p)}</b></span>`).join('');
     const r = rmap[norm(it.name)];
     const rate = r ? `<div class="rate">${bubbles(r[0])}<span class="rscore">${r[0].toFixed(2)}</span>${r[1]?`<span class="rcount">${kfmt(r[1])} ratings</span>`:''}</div>` : '';
-    return `<div class="card"><div class="cardhead"><h3><span class="tnum">${it.num}</span>${esc(it.name)}</h3></div>${rate}<div class="meta">${esc(meta)}</div><div class="origin">◍ ${esc(it.loc)}</div>${it.desc?`<div class="cdesc"${isDe(it.desc)?' lang="de"':''}>${esc(it.desc)}</div>`:''}<div class="prices">${pills}</div></div>`;
+    return `<div class="card"><div class="cardhead"><h3><span class="tnum">${it.num}</span>${esc(it.name)}</h3></div>${rate}<div class="meta">${esc(meta)}</div><div class="origin">◍ ${esc(withCountry(it.loc))}</div>${it.desc?`<div class="cdesc"${isDe(it.desc)?' lang="de"':''}>${esc(it.desc)}</div>`:''}<div class="prices">${pills}</div></div>`;
   }).join('');
   return `<div class="tapnote"><b>🍺 Tasting flight</b> — choose any five 100&nbsp;ml pours from our twenty taps. Ratings are live from Untappd.</div>${cards}`;
 }
@@ -308,6 +308,81 @@ function menunav(active){
 function footer(emblem, stamp){ return `<footer><img class="femblem" src="${emblem}"/><div class="fbrand">TapHouse Frankfurt</div><div class="ftag">Craft Beer Bar with Indian Kitchen</div><div class="faddr">Mendelssohnstraße 51 · 60325 Frankfurt am Main · <a href="tel:+496960660989">+49 69 60660989</a> · <a href="https://www.taphousefrankfurt.com/" target="_blank" rel="noopener">taphousefrankfurt.com</a></div><div class="fsoc">Follow us: <a href="https://www.instagram.com/taphousefrankfurt/" target="_blank" rel="noopener">Instagram</a> · <a href="https://www.facebook.com/taphousefrankfurt" target="_blank" rel="noopener">Facebook</a> · <a href="https://untappd.com/v/taphouse-frankfurt/10241853" target="_blank" rel="noopener">Untappd</a> @taphousefrankfurt</div><div class="fpay">Card payments welcome · Girocard from €10 · Debit/Credit from €15 — no AMEX<br>#SpiceCraft · #EinfachCraftBier · Prices in € incl. VAT</div><div class="flegal">${legalLinks}</div><div class="updated">Menu auto-updated ${stamp}</div></footer>`; }
 const TABS_JS=`document.querySelectorAll('nav.tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.getElementById(b.dataset.tab).classList.add('active');window.scrollTo(0,0);});const h=location.hash.replace('#','');if(['tap','bottle','other'].includes(h)){const t=document.querySelector('nav.tabs button[data-tab="'+h+'"]');if(t)t.click();}`;
 const FILTER_JS=`(function(){const chips=document.getElementById('bchips'),search=document.getElementById('bsearch');if(!chips)return;let cur='all';function apply(){const q=search.value.trim().toLowerCase();let any=false;document.querySelectorAll('#blist .catblock').forEach(bl=>{const ok=cur==='all'||bl.dataset.cat===cur;let sh=0;bl.querySelectorAll('.brow').forEach(r=>{const m=ok&&(!q||r.dataset.name.includes(q));r.style.display=m?'flex':'none';if(m)sh++;});bl.style.display=(ok&&sh>0)?'block':'none';if(sh>0)any=true;});document.getElementById('bempty').style.display=any?'none':'block';}chips.querySelectorAll('.chip').forEach(c=>c.onclick=()=>{chips.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));c.classList.add('active');cur=c.dataset.cat;apply();});search.addEventListener('input',apply);})();`;
+
+// ---- Brewery origin → country -------------------------------------------------
+// Untappd's brewery_location is "City, Region" with no country, so "Stapriņi, Ādažu
+// novads" never matches a search for a Latvian brewery. Verified 02.09.2026: an AI
+// engine read this very tap list and reported that no Frankfurt bar serves Latvian
+// beer, while an Ārpus keg was pouring on tap 20. Appending the country fixes that
+// for every origin, not just the Baltic ones.
+// Unknown regions are returned untouched — we never guess a country.
+const REGION_COUNTRY = {
+  // Germany (German + English forms)
+  'bayern':'Germany','bavaria':'Germany','baden-württemberg':'Germany','baden-wurttemberg':'Germany',
+  'berlin':'Germany','brandenburg':'Germany','bremen':'Germany','hamburg':'Germany','hessen':'Germany',
+  'hesse':'Germany','mecklenburg-vorpommern':'Germany','niedersachsen':'Germany','lower saxony':'Germany',
+  'nordrhein-westfalen':'Germany','north rhine-westphalia':'Germany','rheinland-pfalz':'Germany',
+  'rhineland-palatinate':'Germany','saarland':'Germany','sachsen':'Germany','saxony':'Germany',
+  'sachsen-anhalt':'Germany','saxony-anhalt':'Germany','schleswig-holstein':'Germany',
+  'thüringen':'Germany','thuringia':'Germany',
+  // Austria
+  'carinthia':'Austria','kärnten':'Austria','tyrol':'Austria','tirol':'Austria','salzburg':'Austria',
+  'vienna':'Austria','wien':'Austria','styria':'Austria','steiermark':'Austria','upper austria':'Austria',
+  'lower austria':'Austria','oberösterreich':'Austria','niederösterreich':'Austria','vorarlberg':'Austria',
+  // Belgium / Netherlands
+  'vlaams gewest':'Belgium','flanders':'Belgium','wallonie':'Belgium','wallonia':'Belgium',
+  'brussels':'Belgium','bruxelles':'Belgium','antwerpen':'Belgium','oost-vlaanderen':'Belgium',
+  'west-vlaanderen':'Belgium','limburg':'Belgium',
+  'noord-holland':'Netherlands','zuid-holland':'Netherlands','utrecht':'Netherlands',
+  'gelderland':'Netherlands','noord-brabant':'Netherlands','overijssel':'Netherlands',
+  // UK / Ireland
+  'west yorkshire':'United Kingdom','greater london':'United Kingdom','england':'United Kingdom',
+  'scotland':'United Kingdom','wales':'United Kingdom','northern ireland':'United Kingdom',
+  'derbyshire':'United Kingdom','cornwall':'United Kingdom','kent':'United Kingdom',
+  'manchester':'United Kingdom','greater manchester':'United Kingdom','bristol':'United Kingdom',
+  'leinster':'Ireland','munster':'Ireland',
+  // Nordics
+  'rogaland':'Norway','vestland':'Norway','oslo':'Norway','viken':'Norway','trøndelag':'Norway',
+  'skåne':'Sweden','stockholm':'Sweden','västra götaland':'Sweden',
+  'hovedstaden':'Denmark','midtjylland':'Denmark','syddanmark':'Denmark','sjælland':'Denmark',
+  'uusimaa':'Finland','pirkanmaa':'Finland',
+  // Baltics (see also the suffix rules below)
+  'rīga':'Latvia','riga':'Latvia','vidzeme':'Latvia','kurzeme':'Latvia','zemgale':'Latvia','latgale':'Latvia',
+  'harju maakond':'Estonia','tartu maakond':'Estonia','pärnu maakond':'Estonia','tallinn':'Estonia',
+  'vilniaus':'Lithuania','kauno':'Lithuania','klaipėdos':'Lithuania',
+  // Rest of Europe
+  'ilfov':'Romania','bucurești':'Romania','bucharest':'Romania','cluj':'Romania',
+  'praha':'Czechia','prague':'Czechia','plzeňský kraj':'Czechia','jihomoravský kraj':'Czechia',
+  'catalonia':'Spain','cataluña':'Spain','catalunya':'Spain','basque country':'Spain','país vasco':'Spain',
+  'madrid':'Spain','andalusia':'Spain',
+  'lombardia':'Italy','lombardy':'Italy','piemonte':'Italy','veneto':'Italy','lazio':'Italy','toscana':'Italy',
+  'île-de-france':'France','bretagne':'France','occitanie':'France','grand est':'France',
+  'mazowieckie':'Poland','małopolskie':'Poland','pomorskie':'Poland',
+  'budapest':'Hungary','pest':'Hungary',
+  'zürich':'Switzerland','bern':'Switzerland','vaud':'Switzerland',
+};
+// US / Canadian state + province codes → country
+const US_STATES = new Set(['al','ak','az','ar','ca','co','ct','de','fl','ga','hi','id','il','in','ia','ks','ky','la','me','md','ma','mi','mn','ms','mo','mt','ne','nv','nh','nj','nm','ny','nc','nd','oh','ok','or','pa','ri','sc','sd','tn','tx','ut','vt','va','wa','wv','wi','wy','dc']);
+const CA_PROV  = new Set(['ab','bc','mb','nb','nl','ns','nt','nu','on','pe','qc','sk','yt']);
+
+function withCountry(loc){
+  if(!loc) return '';
+  const parts = String(loc).split(',').map(x=>x.trim()).filter(Boolean);
+  if(!parts.length) return loc;
+  const last = parts[parts.length-1];
+  const key  = last.toLowerCase();
+  // already ends in a country name we'd add — leave it
+  if(Object.values(REGION_COUNTRY).some(c=>c.toLowerCase()===key)) return loc;
+  // Baltic municipality suffixes are unambiguous and cover breweries we have never seen
+  let country = REGION_COUNTRY[key];
+  if(!country && /\bnovads$/.test(key))   country = 'Latvia';    // e.g. Ādažu novads
+  if(!country && /\bmaakond$/.test(key))  country = 'Estonia';   // e.g. Harju maakond
+  if(!country && /savivaldyb/.test(key))   country = 'Lithuania';
+  if(!country && US_STATES.has(key))       country = 'USA';
+  if(!country && CA_PROV.has(key))         country = 'Canada';
+  return country ? loc + ', ' + country : loc;
+}
+
 function page(title, desc, jsonld, body, js, canon){ return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${esc(title)}</title>${canon?`<link rel="canonical" href="${canon}"><meta property="og:url" content="${canon}">`:''}<meta name="description" content="${esc(desc)}"><meta name="robots" content="index,follow,max-image-preview:large"><meta name="keywords" content="craft beer bar Frankfurt, TapHouse Frankfurt, Indian kitchen, tap list, bottled beer, Untappd, #SpiceCraft, Frankfurt am Main, Westend"><meta property="og:type" content="website"><meta property="og:site_name" content="TapHouse Frankfurt"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:locale" content="en"><meta name="twitter:card" content="summary">${FONTS}<style>${STYLE}</style><script type="application/ld+json">${jsonld}</script>${CF_BEACON}</head><body>${body}<script>${js}</script></body></html>`; }
 
 
@@ -325,8 +400,8 @@ function _biz(menuObj){ return ({
   "hasMenu":menuObj }); }
 function _menu(name, sections){ return {"@type":"Menu","name":name,"inLanguage":"en","hasMenuSection":sections.filter(x=>x.items.length).map(sec=>({"@type":"MenuSection","name":sec.name,
   "hasMenuItem":sec.items.map(it=>{const o={"@type":"MenuItem","name":it.name}; if(it.desc)o.description=it.desc; if(it.price)o.offers={"@type":"Offer","price":String(it.price),"priceCurrency":"EUR"}; return o;})}))}; }
-function _tapSecs(tap){ return [{name:"Beers on Tap",items:tap.map(t=>({name:t.name,desc:[t.style,t.abv,t.ibu?t.ibu+" IBU":""].filter(Boolean).join(" · "),price:(t.prices.slice(-1)[0]||[])[1]}))}]; }
-function _botSecs(bottle){ return Object.entries(bottle).map(([cat,items])=>({name:cat,items:items.map(it=>({name:it.name,desc:[it.style,it.abv,it.loc].filter(Boolean).join(" · "),price:it.price}))})); }
+function _tapSecs(tap){ return [{name:"Beers on Tap",items:tap.map(t=>({name:t.name,desc:[t.style,t.abv,t.ibu?t.ibu+" IBU":"",withCountry(t.loc)].filter(Boolean).join(" · "),price:(t.prices.slice(-1)[0]||[])[1]}))}]; }
+function _botSecs(bottle){ return Object.entries(bottle).map(([cat,items])=>({name:cat,items:items.map(it=>({name:it.name,desc:[it.style,it.abv,withCountry(it.loc)].filter(Boolean).join(" · "),price:it.price}))})); }
 function _othSecs(o){ const S=[]; for(const [c,items] of Object.entries(o.spirits)) S.push({name:c,items:items.map(([n,a,p4])=>({name:n,desc:a,price:p4}))});
   S.push({name:"Alcohol-Free Cocktails",items:o.af_cocktails.map(([n,a,p])=>({name:n,desc:a+" non-alcoholic",price:p}))});
   S.push({name:"Wine",items:o.wine.map(([n,a,,g2,bo])=>({name:n,desc:a,price:bo||g2}))});
