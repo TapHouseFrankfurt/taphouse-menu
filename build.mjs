@@ -87,7 +87,7 @@ function parseTap(lines){
     const ibuM = meta.match(/(\d+)\s*IBU/); const ibu = ibuM?ibuM[1]:'';
     const prices=[]; let pm; const re=/(\d+ml[^€]*?)€\s*([\d.]+)/g;
     while((pm=re.exec(price))){
-      let sz = pm[1].replace(/Draft/ig,'').replace(/\(flight\)/ig,'(flight only)').replace(/\s+/g,' ').trim();
+      let sz = pm[1].replace(/Draft/ig,'').replace(/\s+/g,' ').trim();
       prices.push([sz, pm[2]]);
     }
     items.push({ num, name:name.replace(/\s+/g,' ').trim(), loc, style, abv, ibu, prices, desc: desc.replace(/\s+/g,' ').trim() });
@@ -557,7 +557,7 @@ function apiTapBottle(raw, seed){
   const tap = tapItems.map((it,idx)=>{
     const nm = _combined(it).replace(/\s+/g,' ').trim();
     const prices = (it.containers||[]).map(c=>{
-      let sz=((c.container_size&&c.container_size.name)||'').replace(/Draft/ig,'').replace(/\(flight only\)/ig,'(flight)').replace(/\s+/g,' ').trim();
+      let sz=((c.container_size&&c.container_size.name)||'').replace(/Draft/ig,'').replace(/\s+/g,' ').trim();
       return [sz, c.price!=null?Number(c.price).toFixed(2):''];
     });
     const rating = it.rating ? [Number(it.rating), it.rating_count||0] : [0,0];
