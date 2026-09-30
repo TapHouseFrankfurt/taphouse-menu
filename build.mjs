@@ -87,7 +87,7 @@ function parseTap(lines){
     const ibuM = meta.match(/(\d+)\s*IBU/); const ibu = ibuM?ibuM[1]:'';
     const prices=[]; let pm; const re=/(\d+ml[^€]*?)€\s*([\d.]+)/g;
     while((pm=re.exec(price))){
-      let sz = pm[1].replace(/Draft/ig,'').replace(/\(flight only\)/ig,'(flight)').replace(/\s+/g,' ').trim();
+      let sz = pm[1].replace(/Draft/ig,'').replace(/\s+/g,' ').trim();
       prices.push([sz, pm[2]]);
     }
     items.push({ num, name:name.replace(/\s+/g,' ').trim(), loc, style, abv, ibu, prices, desc: desc.replace(/\s+/g,' ').trim() });
