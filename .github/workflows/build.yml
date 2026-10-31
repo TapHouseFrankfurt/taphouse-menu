@@ -12,7 +12,7 @@ on:
     branches: [ main ]
 
 permissions:
-  contents: read
+  contents: write   # needed so the final-menus step can commit the refreshed PDFs
   pages: write
   id-token: write
 
@@ -82,6 +82,14 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: public
+      # ---- Final Menus: render the print/display PDFs and commit them to final-menus/ ----
+      # Runs AFTER the Pages artifact is uploaded, so it can never affect the live site.
+      # Commits only when the visible text changed. Non-fatal. See scripts/publish_final_menus.sh.
+      - name: Refresh final-menus/ PDFs
+        continue-on-error: true
+        run: |
+          sudo apt-get install -y poppler-utils || true
+          bash scripts/publish_final_menus.sh
 
   deploy:
     needs: build
