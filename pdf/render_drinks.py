@@ -117,7 +117,7 @@ def css():
 .bg{position:fixed;top:-14mm;left:-13mm;width:210mm;height:297mm;background:'''+CREAM+''';z-index:-2}
 .bgband{position:fixed;top:-14mm;left:-13mm;width:210mm;height:66mm;background:linear-gradient(180deg,#fbf1dd,'''+CREAM+''');z-index:-1}
 body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
-.note{font-size:8pt;color:'''+MUT+''';font-style:italic;margin:0 0 6pt;border-left:2.5pt solid '''+GOLD+''';padding-left:8pt}
+.note{font-size:9.4pt;color:'''+DEEP+''';font-weight:500;margin:0 0 6pt;border-left:3.2pt solid '''+GOLD+''';padding-left:8pt}
 .cols2{column-count:2;column-gap:15pt}
 .item{break-inside:avoid;margin-bottom:3.4pt;padding-bottom:2.6pt;border-bottom:.5pt solid #ecdcbf}
 .item .n{font-family:"Cormorant";font-weight:700;font-size:12.5pt;color:'''+CRIM+''';line-height:1.05}
@@ -147,7 +147,7 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .omenu .bp{font-size:12pt}
 .omenu .bp2{font-size:8.7pt}
 .omenu .bsub{color:'''+MUT+''';font-size:8pt}
-.omenu .note{font-size:9.2pt}
+.omenu .note{font-size:10.2pt}
 .omenu .oclose{text-align:center;margin:22pt 6pt 0;padding-top:13pt;border-top:1.2pt solid '''+GOLD+''';font-family:"Cormorant";font-style:italic;font-weight:600;font-size:14.5pt;color:'''+CRIM+'''}
 .omenu .oclose::before{content:"◆";display:block;color:'''+GOLD+''';font-size:9pt;margin-bottom:7pt;font-style:normal}
 .omenu .oclose .ocde{font-size:11pt;color:'''+MUT+''';font-weight:400;margin-top:3pt}
@@ -210,7 +210,7 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .dstmt{margin:10pt 0 2pt;padding:9pt 12pt;background:rgba(201,150,58,.12);border-left:3.5pt solid '''+GOLD+''';border-radius:5pt;font-size:9.4pt;line-height:1.45;color:'''+DEEP+'''}
 .dstmt b{color:'''+CRIM+'''}
 .ocompact{font-size:8pt}
-.ocompact .note{font-size:7.9pt;margin-bottom:5pt}
+.ocompact .note{font-size:9.2pt;margin-bottom:5pt}
 .ocompact .cat{margin-bottom:3.5pt}
 .ocompact .cat h3{font-size:12pt;padding-bottom:1.6pt;margin-bottom:2.5pt}
 .ocompact .cat h3 .cc{font-size:8.8pt}
@@ -231,7 +231,7 @@ body{font-family:"Jost";color:'''+INK+''';font-size:8.6pt;line-height:1.4}
 .tdisplay .emblem{height:46pt}
 .tdisplay .hc h1{font-size:27pt}
 .tdisplay .hc .st{font-size:14pt}
-.tdisplay .note{font-size:9pt;margin:0 0 2pt}
+.tdisplay .note{font-size:10.6pt;margin:0 0 3pt}
 .tdisplay .item{margin-bottom:2pt;padding-bottom:1.5pt}
 .tdisplay .item .n{font-size:13.4pt}
 .tdisplay .item .m{font-size:8.2pt}
