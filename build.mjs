@@ -562,7 +562,7 @@ function apiTapBottle(raw, seed){
     });
     const rating = it.rating ? [Number(it.rating), it.rating_count||0] : [0,0];
     if(rating[0]) rmap[norm(nm)] = rating;
-    return { num: idx+1, name: nm, loc: it.brewery_location||'', country: it.brewery_country||'', style: it.custom_style||it.style||'',
+    return { num: Number(it.tap_number) || idx+1, name: nm, loc: it.brewery_location||'', country: it.brewery_country||'', style: it.custom_style||it.style||'',
              abv: _pct(it.custom_abv||it.abv), ibu: _ibu(it.custom_ibu||it.ibu), prices,
              desc: (it.custom_description||it.description||'').replace(/\s+/g,' ').trim() };
   });
